@@ -1,15 +1,15 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Text, PanResponder, Animated } from "react-native";
 import { pieces } from "./lib/settings";
 import { PieceSVG } from "./lib/pieces";
-import { DragInfo, MovePoints, Point } from "@/types";
+import { Point, SquarePoint } from "@/types";
 
 interface Props {
   piece: string;
   color: boolean;
   index: number;
-  setDrag: React.Dispatch<React.SetStateAction<Point | null>>;
-  drop: (points: MovePoints) => void;
+  setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
+  drop: (end: Point, start?: Point) => boolean;
 }
 
 export default function Piece({ piece, color, index, setDrag, drop }: Props) {
@@ -18,39 +18,34 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (e, g) => {
-        console.log("moved");
-        setDrag({ x: e.nativeEvent.pageX, y: e.nativeEvent.pageY });
+        const points = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+        setDrag({ point: points, payload: { piece, color, index } });
         return true;
       },
-      // onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (e, g) => {
-        // setDrag({
-        //   start: { x: g.x0, y: g.y0 },
-        //   end: { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY },
-        //   payload: { piece, color, index },
-        // });
         return Animated.event([null, { dx: pan.x, dy: pan.y }], {
           useNativeDriver: false,
         })(e, g);
       },
       onPanResponderRelease: (e, g) => {
-        // setDrag({
-        //   start: { x: g.x0, y: g.y0 },
-        //   end: { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY },
-        //   payload: { piece, color, index },
-        // });
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
         const start = { x: end.x - g.dx, y: end.y - g.dy };
-        drop({ start, end });
-        Animated.spring(pan, {
-          toValue: { x: 0, y: 0 },
-          useNativeDriver: true,
-        }).start(({ finished }) => {
-          if (finished) {
-            setDrag(null);
-            pan.extractOffset();
-          }
-        });
+        const result = drop(end, start);
+
+        if (!result) {
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: true,
+          }).start(({ finished }) => {
+            if (finished) {
+              // setDrag(false);
+              pan.extractOffset();
+            }
+          });
+        } else {
+          setDrag(null);
+          pan.extractOffset();
+        }
       },
     })
   ).current;

@@ -47,3 +47,10 @@ export function convertFENtoGame(fen: string): GamePosition | undefined {
     fm: parseInt(fm) ?? 0,
   };
 }
+
+export function isValidIndex(index: number) {
+  if (index < 0 || index > 77 || index % 10 > 7) {
+    return false;
+  }
+  return true;
+}

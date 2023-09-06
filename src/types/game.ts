@@ -1,14 +1,9 @@
 export type GameBoard = BoardSquare[][];
-export type BoardSquare = { index: number } & (
-  | {
-      piece: string;
-      color: boolean;
-    }
-  | {
-      piece: undefined;
-      color: undefined;
-    }
-);
+export type BoardSquare = {
+  index: number;
+  piece?: string;
+  color?: boolean;
+};
 export interface GamePosition {
   board: GameBoard;
   fen: string;
@@ -20,12 +15,8 @@ export interface GamePosition {
 }
 
 export type DragInfo = {
-  payload: {
-    piece: string;
-    color: boolean;
-    index: number;
-  };
-  start: {
+  payload: BoardSquare;
+  start?: {
     x: number;
     y: number;
   };
@@ -36,6 +27,7 @@ export type DragInfo = {
 };
 export type Point = { x: number; y: number };
 export type MovePoints = { start: Point; end: Point };
+export type SquarePoint = { point: Point; payload: BoardSquare };
 
 // utilities
 export type FEN = `${string} ${string} ${string} ${string} ${string} ${string}`;

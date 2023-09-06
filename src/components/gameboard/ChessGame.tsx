@@ -1,4 +1,4 @@
-import { GamePosition } from "@/types";
+import { GameBoard, GamePosition } from "@/types";
 import { useState } from "react";
 import { View, Text } from "react-native";
 import { initialFEN } from "./lib/settings";
@@ -23,7 +23,7 @@ export default function ChessGame() {
 
   return (
     <>
-      <ChessBoard board={position.board} />
+      <ChessBoard gameboard={position.board} />
       {/* <Text>
         x: {drag?.end.x}, y: {drag?.end.y}
       </Text> */}

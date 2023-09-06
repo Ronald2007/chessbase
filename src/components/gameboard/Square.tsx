@@ -1,36 +1,78 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { BoardSquare, DragInfo, MovePoints, Point } from "@/types";
+import { BoardSquare, DragInfo, Point, SquarePoint } from "@/types";
 import { View } from "react-native";
 import Piece from "./Piece";
-// import { useDragStore } from "./lib/state";
 
 type Props = BoardSquare & {
-  // drop: (e: DragInfo) => void
-  drop: React.MutableRefObject<(event: DragInfo) => void>;
+  drop: React.MutableRefObject<(event: DragInfo) => boolean>;
+  drag: SquarePoint | null;
+  setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
+  possibleMoves: number[];
 };
 
-export default function Square({ index, piece, color, drop }: Props) {
+export default function Square({
+  index,
+  piece,
+  color,
+  drop,
+  drag,
+  setDrag,
+  possibleMoves,
+}: Props) {
+  const isDragging = drag && drag.payload.index === index;
   const dark = (Math.floor(index / 10) + (index % 10)) % 2 !== 0;
-  const colorClass = dark ? "bg-slate-700 text-white" : "bg-white";
-  const [drag, setDrag] = useState<Point | null>(null);
+  const colorClass = !isDragging
+    ? !possibleMoves.includes(index)
+      ? dark
+        ? "bg-slate-700"
+        : "bg-white"
+      : "bg-yellow-300"
+    : "z-10 bg-red-500";
 
-  const dropPiece = ({ start, end }: MovePoints) => {
-    if (!piece) return;
-    drop.current({
+  const dropPiece = (end: Point, start?: Point) => {
+    const result = drop.current({
       payload: { piece, color, index },
-      start,
+      start: start,
       end,
     });
+
+    return result;
   };
 
   return (
     <View
-      className={`w-[12.5%] h-[12.5%] flex text-center items-center justify-center ${colorClass} ${
-        drag ? "z-10 bg-red-500" : ""
-      }`}
+      onTouchStart={(e) => {
+        console.log("touched");
+
+        const point = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+
+        console.log(drag);
+        if (piece && (!drag || drag?.payload.color === color)) {
+          return setDrag({ point, payload: { piece, color, index } });
+        }
+        // if (drag?.payload.color === color) {
+        //   return setDrag({ point, payload: { piece, color, index } });
+        // }
+
+        const result = dropPiece(point, drag?.point ?? undefined);
+        if (result) {
+          e.stopPropagation();
+        }
+        setDrag(null);
+      }}
+      // onMoveShouldSetResponder={(e) => {
+      //   console.log("move start");
+      //   const end_points = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+      //   const result = dropPiece(end_points);
+      //   if (result) {
+      //     e.stopPropagation();
+      //     setDrag(null);
+      //   }
+      //   return false;
+      // }}
+      className={`w-[12.5%] h-[12.5%] flex text-center items-center justify-center ${colorClass}`}
       key={index}
     >
-      {piece && (
+      {piece && color !== undefined && (
         <Piece
           piece={piece}
           color={color}
