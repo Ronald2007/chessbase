@@ -1,0 +1,7 @@
+clean and organize code
+& improve performance
+& do animations
+
+promotion, flip, reset
+
+record moves

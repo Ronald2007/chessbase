@@ -6,7 +6,7 @@ type Props = BoardSquare & {
   drop: React.MutableRefObject<(event: DragInfo) => boolean>;
   drag: SquarePoint | null;
   setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
-  possibleMoves: number[];
+  isPossibleMove: boolean;
 };
 
 export default function Square({
@@ -16,22 +16,22 @@ export default function Square({
   drop,
   drag,
   setDrag,
-  possibleMoves,
+  isPossibleMove,
 }: Props) {
   const isDragging = drag && drag.payload.index === index;
   const dark = (Math.floor(index / 10) + (index % 10)) % 2 !== 0;
   const colorClass = !isDragging
-    ? !possibleMoves.includes(index)
+    ? !isPossibleMove
       ? dark
         ? "bg-slate-700"
         : "bg-white"
       : "bg-yellow-300"
     : "z-10 bg-red-500";
 
-  const dropPiece = (end: Point, start?: Point) => {
+  const dropPiece = (end: Point) => {
     const result = drop.current({
       payload: { piece, color, index },
-      start: start,
+      start: drag?.point,
       end,
     });
 
@@ -41,11 +41,9 @@ export default function Square({
   return (
     <View
       onTouchStart={(e) => {
-        console.log("touched");
-
         const point = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
 
-        console.log(drag);
+        // set drag only if there is a piece and same color
         if (piece && (!drag || drag?.payload.color === color)) {
           return setDrag({ point, payload: { piece, color, index } });
         }
@@ -53,7 +51,8 @@ export default function Square({
         //   return setDrag({ point, payload: { piece, color, index } });
         // }
 
-        const result = dropPiece(point, drag?.point ?? undefined);
+        // const result = dropPiece(point, drag?.point ?? undefined);
+        const result = dropPiece(point);
         if (result) {
           e.stopPropagation();
         }

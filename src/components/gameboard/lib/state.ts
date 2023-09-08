@@ -29,7 +29,7 @@ export const useDragStore = create<DragStoreState & DragStoreActions>(
     setDrag: (drag) => set(() => ({ drag })),
     drop: () => {
       const drag = get().drag;
-      console.log(drag);
+      // console.log(drag);
     },
   })
 );

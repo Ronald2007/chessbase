@@ -9,7 +9,7 @@ interface Props {
   color: boolean;
   index: number;
   setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
-  drop: (end: Point, start?: Point) => boolean;
+  drop: (end: Point) => boolean;
 }
 
 export default function Piece({ piece, color, index, setDrag, drop }: Props) {
@@ -18,8 +18,9 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (e, g) => {
-        const points = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-        setDrag({ point: points, payload: { piece, color, index } });
+        const dis = { x: g.dx - g.x0, y: g.dy - g.y0 };
+        pan.setOffset(dis);
+
         return true;
       },
       onPanResponderMove: (e, g) => {
@@ -29,18 +30,17 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
       },
       onPanResponderRelease: (e, g) => {
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-        const start = { x: end.x - g.dx, y: end.y - g.dy };
-        const result = drop(end, start);
+        // const start = { x: end.x - g.dx, y: end.y - g.dy };
+        const result = drop(end);
+
+        pan.flattenOffset();
 
         if (!result) {
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: true,
-          }).start(({ finished }) => {
-            if (finished) {
-              // setDrag(false);
-              pan.extractOffset();
-            }
+          }).start(() => {
+            pan.extractOffset();
           });
         } else {
           setDrag(null);

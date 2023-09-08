@@ -1,8 +1,17 @@
-import { View } from "react-native";
-import { DragInfo, GameBoard, Point, SquarePoint } from "@/types";
+import { View, StatusBar } from "react-native";
+import {
+  DragInfo,
+  GameBoard,
+  GameMove,
+  Move,
+  Point,
+  SquarePoint,
+} from "@/types";
 import Square from "./Square";
 import { useEffect, useRef, useState } from "react";
 import { findMoves } from "./lib/moves";
+import { getSquare, isValidIndex, makeMove } from "./lib/utils";
+import { convertBoardtoFEN } from "./lib/fen";
 
 interface LayoutRect {
   x: number;
@@ -12,71 +21,81 @@ interface LayoutRect {
 }
 
 interface Props {
-  gameboard: GameBoard;
+  position: GameMove;
+  addMove: (newMove: GameMove) => void;
 }
 
-export default function ChessBoard({ gameboard }: Props) {
+export default function ChessBoard({ position, addMove }: Props) {
   const [drag, setDrag] = useState<SquarePoint | null>(null);
-  const [possibleMoves, setPossibleMoves] = useState<number[]>([]);
+  const [possibleMoves, setPossibleMoves] = useState<Move[]>([]);
   const [layoutRect, setLayoutRect] = useState<LayoutRect>();
-  const [board, setBoard] = useState(gameboard);
+  const [board] = useState<GameBoard>(position.board);
   let prevDrag: Point | null = null;
+
+  // console.log(position.fm);
 
   useEffect(() => {
     if (drag) {
-      setPossibleMoves(findMoves(board, drag.payload.index));
+      const moves = findMoves(board, drag.payload.index, position);
+      setPossibleMoves(moves);
     } else {
       setPossibleMoves([]);
     }
   }, [drag, board]);
 
   function playMove(start: number, end: number) {
-    if (start === end || !possibleMoves.includes(end)) return false;
+    const move = possibleMoves.find((m) => m.to === end);
+    if (start === end || !move) return false;
 
-    console.log("move played");
-    const [start_row, start_col] = [Math.floor(start / 10), start % 10];
-    const [end_row, end_col] = [Math.floor(end / 10), end % 10];
-    const start_block = board[start_row][start_col];
-    const end_block = board[end_row][end_col];
-
-    board[end_row][end_col] = { ...start_block, index: end_block.index };
-    board[start_row][start_col] = { index: start_block.index };
-    setBoard([...board]);
+    const block = getSquare(board, move.from);
+    const newPosition = makeMove(board, move, position);
+    // setBoard([...newPosition.board]);
+    const newMove = {
+      board: newPosition.board,
+      cr: newPosition.cr,
+      target: newPosition.target,
+      turn: !position.turn,
+      fm: !position.turn ? position.fm + 1 : position.fm,
+      hm: block?.piece === "p" ? 0 : position.hm,
+    };
+    // console.log("newMove: ", newMove);
+    addMove({ ...newMove, fen: convertBoardtoFEN(newMove.board) });
+    return true;
   }
 
-  // if true, move was played
-  // if false, move wasn't played
   function drop(event: DragInfo): boolean {
     if (!layoutRect) return false;
-    const start = event.start ?? prevDrag;
+    const start = drag?.point ?? event.start ?? prevDrag;
     if (!start) return false;
+    const block_height = (layoutRect.height - 2) / 8;
+    const block_width = (layoutRect.width - 2) / 8;
+    // find end index
     const end_row = Math.floor(
-      (event.end.y - layoutRect.y) / (layoutRect.height / 8) - 1
+      (event.end.y - layoutRect.y - (StatusBar.currentHeight ?? 0)) /
+        block_height
     );
-    const end_col = Math.floor(
-      (event.end.x - layoutRect.x) / (layoutRect.width / 8)
-    );
-
-    console.log("end - row: ", end_row, " col: ", end_col);
-
+    const end_col = Math.floor((event.end.x - layoutRect.x) / block_width);
+    const end_index = end_row * 10 + end_col;
+    // find start index
     const start_row = Math.floor(
-      (start.y - layoutRect.y) / (layoutRect.height / 8) - 1
+      (start.y - layoutRect.y - (StatusBar.currentHeight ?? 0)) / block_height
     );
-    const start_col = Math.floor(
-      (start.x - layoutRect.x) / (layoutRect.width / 8)
-    );
+    const start_col = Math.floor((start.x - layoutRect.x) / block_width);
+    const start_index = start_row * 10 + start_col;
 
-    console.log("start - row: ", start_row, " col: ", start_col);
+    // console.log(start_index, " : ", end_index);
 
     if (end_row === start_row && end_col === start_col) {
       prevDrag = start;
       return false;
     }
-
-    // move was played
-    playMove(start_row * 10 + start_col, end_row * 10 + end_col);
+    if (!isValidIndex(start_index) || !isValidIndex(end_index)) {
+      prevDrag = null;
+      return false;
+    }
+    const result = playMove(start_index, end_index);
     prevDrag = null;
-    return true;
+    return result;
   }
 
   const dp = useRef<typeof drop>(drop);
@@ -97,7 +116,7 @@ export default function ChessBoard({ gameboard }: Props) {
             drop={dp}
             drag={drag}
             setDrag={setDrag}
-            possibleMoves={possibleMoves}
+            isPossibleMove={!!possibleMoves.find((m) => m.to === sqr.index)}
           />
         ))
       )}

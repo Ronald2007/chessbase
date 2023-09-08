@@ -29,6 +29,23 @@ export type Point = { x: number; y: number };
 export type MovePoints = { start: Point; end: Point };
 export type SquarePoint = { point: Point; payload: BoardSquare };
 
+export type Move = {
+  from: number;
+  to: number;
+  type: "normal" | "castle" | "enpassant";
+};
+
+export type GameMove = GamePosition & { prevMove?: Move };
+
+export type NewBoardProps = Omit<GamePosition, "fen" | "turn" | "hm" | "fm">;
+// const ab: a = {  }
+
+// interface NewBoardProps {
+//   board: GameBoard;
+//   cr: string | null;
+//   target: string | null;
+// }
+
 // utilities
 export type FEN = `${string} ${string} ${string} ${string} ${string} ${string}`;
 export type FENarray = [string, string, string, string, string, string];
