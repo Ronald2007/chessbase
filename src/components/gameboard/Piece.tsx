@@ -17,7 +17,7 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
 
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (e, g) => {
+      onStartShouldSetPanResponder: (e, g) => {
         const dis = { x: g.dx - g.x0, y: g.dy - g.y0 };
         pan.setOffset(dis);
 
@@ -30,7 +30,6 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
       },
       onPanResponderRelease: (e, g) => {
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-        // const start = { x: end.x - g.dx, y: end.y - g.dy };
         const result = drop(end);
 
         pan.flattenOffset();

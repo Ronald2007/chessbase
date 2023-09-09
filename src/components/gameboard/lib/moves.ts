@@ -227,6 +227,7 @@ export function findPawnMoves(
     const possibleCapture = board[row - colorValue][(sqr.index % 10) + i];
     const targetSqr = getSquare(board, targetPawnIdx);
     if (
+      possibleCapture &&
       targetSqr &&
       targetSqr.piece === "p" &&
       possibleCapture.index === targetIdx &&
@@ -413,4 +414,21 @@ export function checkForChecks(
   }
 
   return moves;
+}
+
+export function findAllMoves(
+  board: GameBoard,
+  turn: boolean,
+  lastMove: GameMove
+) {
+  const allMoves: Record<number, Move[]> = {};
+  for (let row of board) {
+    for (let sqr of row) {
+      if (sqr.color === turn) {
+        allMoves[sqr.index] = findMoves(board, sqr.index, lastMove);
+      }
+    }
+  }
+
+  return allMoves;
 }

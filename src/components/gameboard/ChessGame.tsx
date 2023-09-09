@@ -9,7 +9,6 @@ export default function ChessGame() {
   const [moves, setMoves] = useState<GameMove[]>([
     convertFENtoGame(initialFEN)!,
   ]);
-  // const position = moves[0];
   const [position, setPosition] = useState(moves[0]);
 
   if (!position || !position.board) {

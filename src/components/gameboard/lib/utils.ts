@@ -7,6 +7,7 @@ import {
   NewBoardProps,
 } from "@/types";
 import { letters, numbers } from "./settings";
+import { findMoves } from "./moves";
 
 export function isValidIndex(index: number) {
   if (index < 0 || index > 77 || index % 10 > 7) {

@@ -25,6 +25,8 @@ export type DragInfo = {
     y: number;
   };
 };
+export type DragEndInfo = Omit<DragInfo, "start">;
+
 export type Point = { x: number; y: number };
 export type MovePoints = { start: Point; end: Point };
 export type SquarePoint = { point: Point; payload: BoardSquare };
