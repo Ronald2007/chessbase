@@ -1,18 +1,26 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Text, PanResponder, Animated } from "react-native";
-import { pieces } from "./lib/settings";
+import { ANIMATION_DURATION, pieces } from "./lib/settings";
 import { PieceSVG } from "./lib/pieces";
-import { Point, SquarePoint } from "@/types";
+import { DropResult, DropType, Point, SquarePoint } from "@/types";
 
 interface Props {
   piece: string;
   color: boolean;
   index: number;
   setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
-  drop: (end: Point) => boolean;
+  drop: (end: Point, type: DropType) => DropResult | undefined;
+  animateTo?: DropResult;
 }
 
-export default function Piece({ piece, color, index, setDrag, drop }: Props) {
+export default function Piece({
+  piece,
+  color,
+  index,
+  animateTo,
+  setDrag,
+  drop,
+}: Props) {
   const pan = useRef(new Animated.ValueXY()).current;
 
   const panResponder = useRef(
@@ -30,9 +38,11 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
       },
       onPanResponderRelease: (e, g) => {
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-        const result = drop(end);
+        const result = drop(end, "drag");
 
         pan.flattenOffset();
+
+        // console.log("dragged");
 
         if (!result) {
           Animated.spring(pan, {
@@ -42,12 +52,45 @@ export default function Piece({ piece, color, index, setDrag, drop }: Props) {
             pan.extractOffset();
           });
         } else {
+          // const animateTo = {
+          //   x: result.endPoint.x - result.startPoint.x,
+          //   y: result.endPoint.y - result.startPoint.y,
+          // };
+          // console.log(animateTo);
+          // setDrag(null);
+          // Animated.timing(pan, {
+          //   toValue: animateTo,
+          //   useNativeDriver: true,
+          //   duration: 100,
+          // }).start(() => {
+          //   pan.extractOffset();
+          // });
           setDrag(null);
           pan.extractOffset();
         }
       },
     })
   ).current;
+
+  useEffect(() => {
+    if (
+      animateTo &&
+      animateTo.type === "touch" &&
+      animateTo.startIndex === index
+    ) {
+      const goTo = {
+        x: animateTo.endPoint.x - animateTo.startPoint.x,
+        y: animateTo.endPoint.y - animateTo.startPoint.y,
+      };
+      Animated.timing(pan, {
+        toValue: goTo,
+        useNativeDriver: true,
+        duration: ANIMATION_DURATION,
+      }).start(() => {
+        pan.extractOffset();
+      });
+    }
+  }, [animateTo]);
 
   if (!pieces.includes(piece)) return <Text>-1</Text>;
 

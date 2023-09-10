@@ -14,18 +14,13 @@ export interface GamePosition {
   fm: number;
 }
 
-export type DragInfo = {
+export type DropInfo = {
   payload: BoardSquare;
-  start?: {
-    x: number;
-    y: number;
-  };
-  end: {
-    x: number;
-    y: number;
-  };
+  start?: Point;
+  end: Point;
+  type: DropType;
 };
-export type DragEndInfo = Omit<DragInfo, "start">;
+export type DropEndInfo = Omit<DropInfo, "start">;
 
 export type Point = { x: number; y: number };
 export type MovePoints = { start: Point; end: Point };
@@ -40,13 +35,23 @@ export type Move = {
 export type GameMove = GamePosition & { prevMove?: Move };
 
 export type NewBoardProps = Omit<GamePosition, "fen" | "turn" | "hm" | "fm">;
-// const ab: a = {  }
 
-// interface NewBoardProps {
-//   board: GameBoard;
-//   cr: string | null;
-//   target: string | null;
-// }
+export type DropResult = {
+  startIndex: number;
+  endIndex: number;
+  startPoint: Point;
+  endPoint: Point;
+  type: DropType;
+};
+
+export type DropType = "touch" | "drag";
+
+export interface LayoutRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 // utilities
 export type FEN = `${string} ${string} ${string} ${string} ${string} ${string}`;

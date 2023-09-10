@@ -1,1 +1,0 @@
-- disable castling when rook is captured

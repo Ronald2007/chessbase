@@ -1,13 +1,12 @@
 import {
-  FENarray,
   GameBoard,
   GameMove,
-  GamePosition,
+  LayoutRect,
   Move,
   NewBoardProps,
+  Point,
 } from "@/types";
 import { letters, numbers } from "./settings";
-import { findMoves } from "./moves";
 
 export function isValidIndex(index: number) {
   if (index < 0 || index > 77 || index % 10 > 7) {
@@ -25,10 +24,11 @@ export function getSquare(board: GameBoard, index: number) {
 }
 
 export function makeMove(
-  board: GameBoard,
+  actualBoard: GameBoard,
   move: Move,
   lastMove: GameMove
 ): NewBoardProps {
+  const board: GameBoard = JSON.parse(JSON.stringify(actualBoard));
   if (move.from === move.to) return { board, cr: null, target: null };
 
   // get values
@@ -95,17 +95,33 @@ export function makeMove(
       cr = cr.replace("k", "").replace("q", "");
     }
   }
-  if (start_block.piece === "r") {
-    if (start_block.color) {
-      if (start_block.index === 77) cr = cr.replace("K", "");
-      else if (start_block.index === 70) cr = cr.replace("Q", "");
-    } else {
-      if (start_block.index === 7) cr = cr.replace("k", "");
-      else if (start_block.index === 0) cr = cr.replace("q", "");
+  for (let block of [start_block, end_block]) {
+    if (block.piece === "r") {
+      if (block.color) {
+        if (block.index === 77) cr = cr.replace("K", "");
+        else if (block.index === 70) cr = cr.replace("Q", "");
+      } else {
+        if (block.index === 7) cr = cr.replace("k", "");
+        else if (block.index === 0) cr = cr.replace("q", "");
+      }
     }
   }
 
-  // console.log("aftercr: ", cr);
-
   return { board, cr: cr === "" ? null : cr, target: enpassantTarget };
 }
+
+// export function convertPointToIndex(start: Point, end: Point, layoutRect: LayoutRect) {
+//   const block_height = (layoutRect.height - 2) / 8;
+//     const block_width = (layoutRect.width - 2) / 8;
+//     // find end index
+//     const end_row = Math.floor(
+//       (end.y - layoutRect.y - (StatusBar.currentHeight ?? 0)) / block_height
+//     );
+//     const end_col = Math.floor((end.x - layoutRect.x) / block_width);
+//     const end_index = end_row * 10 + end_col;
+//     // const endXCenter =
+//     // find start index
+//     const start_row = Math.floor(drag.payload.index / 10);
+//     const start_col = drag.payload.index % 10;
+//     const start_index = start_row * 10 + start_col;
+// }

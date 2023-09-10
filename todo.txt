@@ -1,7 +1,5 @@
-clean and organize code
-& improve performance
-& do animations
+complex animations
 
-promotion, flip, reset
+promotion, reset, highlight squares, ghosting on drag
 
-record moves
+move playback

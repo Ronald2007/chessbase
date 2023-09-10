@@ -285,8 +285,6 @@ export function isKingInCheck(
   if (move.from !== move.to) {
     tempBoard = makeMove(tempBoard, move, lastMove).board;
   }
-  // const end_block = getSquare(tempBoard, move.from)!;
-  // if (sqr.piece === "k") dummyKingSqr.index = end_block.index;
 
   // knight threats
   const knightThreats = findKnightMoves(tempBoard, dummyKingSqr);

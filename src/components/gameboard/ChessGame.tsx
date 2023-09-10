@@ -5,7 +5,11 @@ import { initialFEN } from "./lib/settings";
 import { convertFENtoGame } from "./lib/fen";
 import ChessBoard from "./GameBoard";
 
-export default function ChessGame() {
+interface GameProps {
+  flip?: boolean;
+}
+
+export default function ChessGame({ flip }: GameProps) {
   const [moves, setMoves] = useState<GameMove[]>([
     convertFENtoGame(initialFEN)!,
   ]);
@@ -20,9 +24,10 @@ export default function ChessGame() {
   }
 
   function addMove(newMove: GameMove) {
+    console.log("new move added");
     setMoves([...moves, newMove]);
     setPosition(newMove);
   }
 
-  return <ChessBoard position={position} addMove={addMove} />;
+  return <ChessBoard position={position} addMove={addMove} flip={flip} />;
 }
