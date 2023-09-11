@@ -7,11 +7,12 @@ import ChessBoard from "./GameBoard";
 
 interface GameProps {
   flip?: boolean;
+  startFEN?: string;
 }
 
-export default function ChessGame({ flip }: GameProps) {
+export default function ChessGame({ flip, startFEN }: GameProps) {
   const [moves, setMoves] = useState<GameMove[]>([
-    convertFENtoGame(initialFEN)!,
+    convertFENtoGame(startFEN ?? initialFEN)!,
   ]);
   const [position, setPosition] = useState(moves[0]);
 

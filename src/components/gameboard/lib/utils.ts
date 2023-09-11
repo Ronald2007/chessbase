@@ -4,6 +4,7 @@ import {
   LayoutRect,
   Move,
   NewBoardProps,
+  PieceMove,
   Point,
 } from "@/types";
 import { letters, numbers } from "./settings";
@@ -125,3 +126,68 @@ export function makeMove(
 //     const start_col = drag.payload.index % 10;
 //     const start_index = start_row * 10 + start_col;
 // }
+
+export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
+  const animations: PieceMove[] = [];
+
+  for (let i = 0; i < prevBoard.length; i++) {
+    for (let j = 0; j < prevBoard[i].length; j++) {
+      const psqr = prevBoard[i][j];
+      const csqr = board[i][j];
+      if (psqr.id && psqr.id !== csqr.id) {
+        const aidx = animations.findIndex(
+          (animation) => animation.id === psqr.id
+        );
+        if (aidx < 0) {
+          animations.push({
+            id: psqr.id,
+            from: psqr.index,
+            payload: psqr as any,
+            to: -1,
+          });
+        } else {
+          animations[aidx].from = psqr.index;
+        }
+      }
+      if (csqr.id && csqr.id !== psqr.id) {
+        const aidx = animations.findIndex(
+          (animation) => animation.id === csqr.id
+        );
+        if (aidx < 0) {
+          animations.push({
+            id: csqr.id,
+            to: csqr.index,
+            payload: csqr as any,
+            from: -1,
+          });
+        } else {
+          animations[aidx].to = csqr.index;
+        }
+      }
+    }
+  }
+
+  // console.log(animations);
+  return animations;
+}
+
+export function convertIndexToPoint(
+  index: number,
+  layoutRect: LayoutRect,
+  flip: boolean
+): Point {
+  const row = Math.floor(index / 10);
+  const col = index % 10;
+  const block_height = layoutRect.height / 8;
+  const block_width = layoutRect.width / 8;
+  const point: Point = {
+    x:
+      Math.abs((flip ? layoutRect.width : 0) - col * block_width) +
+      layoutRect.x,
+    y:
+      Math.abs((flip ? layoutRect.height : 0) - row * block_height) +
+      layoutRect.y,
+  };
+
+  return point;
+}

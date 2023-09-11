@@ -267,6 +267,7 @@ export function isKingInCheck(
     }
     if (!kingPosition) return false;
     dummyKingSqr = {
+      id: `${sqr.color ? "K" : "k"}0`,
       piece: "k",
       color: sqr.color,
       index: kingPosition,
@@ -356,6 +357,7 @@ export function checkForChecks(
   }
   if (!kingPosition) return [];
   const dummyKingSqr: BoardSquare = {
+    id: `${sqr.color ? "K" : "k"}0`,
     piece: "k",
     color: sqr.color,
     index: kingPosition,

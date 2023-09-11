@@ -1,6 +1,7 @@
 export type GameBoard = BoardSquare[][];
 export type BoardSquare = {
   index: number;
+  id?: string;
   piece?: string;
   color?: boolean;
 };
@@ -20,7 +21,7 @@ export type DropInfo = {
   end: Point;
   type: DropType;
 };
-export type DropEndInfo = Omit<DropInfo, "start">;
+export type DropEndInfo = Omit<DropInfo, "payload" | "start">;
 
 export type Point = { x: number; y: number };
 export type MovePoints = { start: Point; end: Point };
@@ -52,6 +53,18 @@ export interface LayoutRect {
   width: number;
   height: number;
 }
+
+export type PieceMove = {
+  id: string;
+  to: number;
+  from: number;
+  payload: Required<BoardSquare>;
+};
+
+export type PieceMoveAnimation = PieceMove & {
+  start: Point;
+  end: Point;
+};
 
 // utilities
 export type FEN = `${string} ${string} ${string} ${string} ${string} ${string}`;

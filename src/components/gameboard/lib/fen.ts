@@ -6,6 +6,7 @@ export function convertFENtoBoard(fen: string) {
   if (!pfen) return;
 
   const board: GameBoard = [];
+  const pieceCount: Record<string, number> = {};
   let row = 0;
   board.push([]);
   for (let i = 0; i < pfen.length; i++) {
@@ -18,8 +19,10 @@ export function convertFENtoBoard(fen: string) {
         board[row].push({ index: parseInt(`${row}${board[row].length}`) });
       }
     } else {
+      pieceCount[pfen[i]] = (pieceCount[pfen[i]] ?? -1) + 1;
       board[row].push({
         index: parseInt(`${row}${board[row].length}`),
+        id: `${pfen[i]}${pieceCount[pfen[i]]}`,
         piece: pfen[i].toLowerCase(),
         color: pfen[i].toLowerCase() !== pfen[i],
       });

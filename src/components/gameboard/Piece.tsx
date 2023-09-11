@@ -1,26 +1,39 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Text, PanResponder, Animated } from "react-native";
 import { ANIMATION_DURATION, pieces } from "./lib/settings";
 import { PieceSVG } from "./lib/pieces";
-import { DropResult, DropType, Point, SquarePoint } from "@/types";
+import {
+  DropEndInfo,
+  DropResult,
+  DropType,
+  PieceMoveAnimation,
+  Point,
+  SquarePoint,
+} from "@/types";
 
 interface Props {
   piece: string;
   color: boolean;
   index: number;
+  id: string;
   setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
-  drop: (end: Point, type: DropType) => DropResult | undefined;
-  animateTo?: DropResult;
+  // drop: (end: Point, type: DropType) => DropResult | undefined;
+  drop: React.MutableRefObject<(event: DropEndInfo) => DropResult | undefined>;
+  animation?: PieceMoveAnimation;
 }
 
 export default function Piece({
   piece,
   color,
   index,
-  animateTo,
+  id,
   setDrag,
   drop,
+  animation,
 }: Props) {
+  // console.log("refreshed piece", index);
+
+  const [fade] = useState(new Animated.Value(1));
   const pan = useRef(new Animated.ValueXY()).current;
 
   const panResponder = useRef(
@@ -38,11 +51,9 @@ export default function Piece({
       },
       onPanResponderRelease: (e, g) => {
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-        const result = drop(end, "drag");
+        const result = drop.current({ end, type: "drag" });
 
         pan.flattenOffset();
-
-        // console.log("dragged");
 
         if (!result) {
           Animated.spring(pan, {
@@ -52,19 +63,6 @@ export default function Piece({
             pan.extractOffset();
           });
         } else {
-          // const animateTo = {
-          //   x: result.endPoint.x - result.startPoint.x,
-          //   y: result.endPoint.y - result.startPoint.y,
-          // };
-          // console.log(animateTo);
-          // setDrag(null);
-          // Animated.timing(pan, {
-          //   toValue: animateTo,
-          //   useNativeDriver: true,
-          //   duration: 100,
-          // }).start(() => {
-          //   pan.extractOffset();
-          // });
           setDrag(null);
           pan.extractOffset();
         }
@@ -73,31 +71,55 @@ export default function Piece({
   ).current;
 
   useEffect(() => {
-    if (
-      animateTo &&
-      animateTo.type === "touch" &&
-      animateTo.startIndex === index
-    ) {
-      const goTo = {
-        x: animateTo.endPoint.x - animateTo.startPoint.x,
-        y: animateTo.endPoint.y - animateTo.startPoint.y,
-      };
-      Animated.timing(pan, {
-        toValue: goTo,
-        useNativeDriver: true,
-        duration: ANIMATION_DURATION,
-      }).start(() => {
-        pan.extractOffset();
-      });
+    if (animation) {
+      // console.log("piece anim: ", animation);
+      if (animation.to < 0) {
+        const fadeAnim = Animated.timing(fade, {
+          toValue: 0,
+          useNativeDriver: true,
+          duration: ANIMATION_DURATION,
+        });
+
+        fadeAnim.start(() => {
+          fade.setValue(1);
+          fade.stopAnimation();
+          animation = undefined;
+          fadeAnim.stop();
+        });
+      } else {
+        const goTo = {
+          x: animation.end.x - animation.start.x,
+          y: animation.end.y - animation.start.y,
+        };
+
+        const anim = Animated.timing(pan, {
+          toValue: goTo,
+          useNativeDriver: true,
+          duration: ANIMATION_DURATION,
+        });
+
+        anim.start(() => {
+          pan.setValue({ x: 0, y: 0 });
+          pan.extractOffset();
+          animation = undefined;
+          anim.stop();
+        });
+      }
+    } else {
+      fade.stopAnimation();
+      pan.stopAnimation();
     }
-  }, [animateTo]);
+  }, [animation]);
 
   if (!pieces.includes(piece)) return <Text>-1</Text>;
 
   return (
     <Animated.View
+      className="w-[12.5%] h-[12.5%] flex text-center items-center justify-center relative"
       style={{
         transform: [{ translateX: pan.x }, { translateY: pan.y }],
+        zIndex: animation?.from === index ? 20 : 0,
+        opacity: fade,
       }}
       {...panResponder.panHandlers}
     >

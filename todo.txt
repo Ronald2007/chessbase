@@ -1,5 +1,5 @@
-complex animations
+clean up
 
-promotion, reset, highlight squares, ghosting on drag
+promotion, fix flip, reset, highlight squares, ghosting on drag
 
 move playback
