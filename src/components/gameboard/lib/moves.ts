@@ -1,4 +1,4 @@
-import { BoardSquare, GameBoard, GameMove, GamePosition, Move } from "@/types";
+import { BoardSquare, GameBoard, GameMove, Move } from "@/types";
 import { getSquare, isValidIndex, makeMove } from "./utils";
 import { letters, numbers } from "./settings";
 
@@ -8,9 +8,9 @@ export function findMoves(
   lastMove: GameMove
 ): Move[] {
   const sqr = isValidIndex(index) && getSquare(board, index);
-  // const sqr = getSquare(board, index);
   if (!sqr) return [];
 
+  /* Finds moves without checking for checks */
   let moves: Move[] = [];
   if (sqr.piece === "n") {
     moves = findKnightMoves(board, sqr);
@@ -26,6 +26,7 @@ export function findMoves(
     moves = findPawnMoves(board, sqr, lastMove?.target);
   }
 
+  /* Moves that don't end up in check */
   const newMoves = checkForChecks(
     JSON.parse(JSON.stringify(board)),
     moves,
@@ -70,7 +71,7 @@ export function findKingMoves(
 
   if (!cr) return moves;
 
-  // handle castling
+  /* Handle castling */
   if (sqr.color && sqr.index === 74) {
     const srook = getSquare(board, 77);
     const lrook = getSquare(board, 70);
@@ -164,6 +165,7 @@ export function findBishopMoves(board: GameBoard, sqr: BoardSquare): Move[] {
   return moves;
 }
 
+/* Rook moves and bishop moves combined */
 export function findQueenMoves(board: GameBoard, sqr: BoardSquare): Move[] {
   return [...findRookMoves(board, sqr), ...findBishopMoves(board, sqr)];
 }
@@ -177,7 +179,7 @@ export function findPawnMoves(
   const colorValue = sqr.color ? 1 : -1;
   const row = Math.floor(sqr.index / 10);
 
-  //  advance
+  /* Advances */
   const frontSqr = board[row - colorValue][sqr.index % 10];
   if (!frontSqr?.piece) {
     moves.push({ to: frontSqr.index, from: sqr.index, type: "normal" });
@@ -199,7 +201,7 @@ export function findPawnMoves(
     }
   }
 
-  // capture
+  /* Captures */
   for (let i of [1, -1]) {
     const possibleCapture = board[row - colorValue][(sqr.index % 10) + i];
     if (
@@ -215,7 +217,7 @@ export function findPawnMoves(
     }
   }
 
-  // enpassant
+  /* Enpassant */
   if (!(target?.length === 2)) return moves;
   const col = letters.findIndex((l) => l === target[0]);
   const trow = numbers.findIndex((n) => n === parseInt(target[1]));
@@ -252,6 +254,8 @@ export function isKingInCheck(
 ): boolean {
   const sqr = getSquare(board, move.from);
   if (!sqr) return false;
+
+  /* Find position of king */
   let dummyKingSqr: BoardSquare;
   if (!kingSqr) {
     let kingPosition: number | null = null;
@@ -276,18 +280,21 @@ export function isKingInCheck(
     dummyKingSqr = kingSqr;
   }
 
+  /* If the piece moved was the king, update its position */
   if (sqr.piece === "k") {
     dummyKingSqr.index = move.to;
   }
 
+  /* Create clone of the board */
   let tempBoard: GameBoard = JSON.parse(JSON.stringify(board));
 
-  // make move
+  /* Make move, otherwise no move was done */
   if (move.from !== move.to) {
+    // makeMove takes care of complex moves
     tempBoard = makeMove(tempBoard, move, lastMove).board;
   }
 
-  // knight threats
+  /* Check for knight threats */
   const knightThreats = findKnightMoves(tempBoard, dummyKingSqr);
   for (let t of knightThreats) {
     const tsqr = getSquare(tempBoard, t.to);
@@ -296,7 +303,7 @@ export function isKingInCheck(
     }
   }
 
-  // rook threats
+  /* Check for threats on columns or file */
   const rookThreats = findRookMoves(tempBoard, dummyKingSqr);
   for (let t of rookThreats) {
     const tsqr = getSquare(tempBoard, t.to);
@@ -309,7 +316,7 @@ export function isKingInCheck(
     }
   }
 
-  // bishop threats
+  /* Check for threats along diagonals */
   const bishopThreats = findBishopMoves(tempBoard, dummyKingSqr);
   for (let t of bishopThreats) {
     const tsqr = getSquare(tempBoard, t.to);
@@ -322,7 +329,7 @@ export function isKingInCheck(
     }
   }
 
-  // pawn threats
+  /* Check for pawn threats, enpassant doesn't need to be checked */
   const colorValue = sqr.color ? 1 : -1;
   const kpos = dummyKingSqr.index;
   for (let c of [-1, 1]) {
@@ -344,6 +351,7 @@ export function checkForChecks(
   const sqr = getSquare(board, moves[0].from);
   if (!sqr) return [];
 
+  /* Find king position, so that isKingInCheck doesn't need to */
   let kingPosition: number | null = null;
   if (sqr.piece === "k") kingPosition = sqr.index;
   else {
@@ -363,10 +371,12 @@ export function checkForChecks(
     index: kingPosition,
   };
 
+  /* Go through every possible move */
+  // stores moves to be deleted
   const movesToDelete: number[] = [];
   for (let i = 0; i < moves.length; i++) {
     const move = moves[i];
-    // check square before castling
+    /* Check square before castling */
     if (move.type === "castle" && sqr.piece === "k") {
       const self_move = { ...move, to: move.from };
       if (isKingInCheck(board, self_move, lastMove, dummyKingSqr)) {
@@ -399,13 +409,13 @@ export function checkForChecks(
       }
     }
 
-    // check actual square
+    /* Check actual square */
     if (isKingInCheck(board, move, lastMove, dummyKingSqr)) {
       movesToDelete.push(move.to);
     }
   }
 
-  // delete moves
+  /* Delete moves that had checks */
   for (let d of movesToDelete) {
     const idx = moves.findIndex((m) => m.to === d);
     if (idx > -1) {
@@ -416,11 +426,10 @@ export function checkForChecks(
   return moves;
 }
 
-export function findAllMoves(
-  board: GameBoard,
-  turn: boolean,
-  lastMove: GameMove
-) {
+/* Find moves for all playable pieces */
+export function findAllMoves(lastMove: GameMove) {
+  const board = lastMove.board;
+  const turn = lastMove.turn;
   const allMoves: Record<number, Move[]> = {};
   for (let row of board) {
     for (let sqr of row) {

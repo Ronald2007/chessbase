@@ -17,22 +17,21 @@ interface Props {
   index: number;
   id: string;
   setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
-  // drop: (end: Point, type: DropType) => DropResult | undefined;
   drop: React.MutableRefObject<(event: DropEndInfo) => DropResult | undefined>;
   animation?: PieceMoveAnimation;
+  isDragging: boolean;
 }
 
 export default function Piece({
   piece,
   color,
   index,
-  id,
+  id: _,
   setDrag,
   drop,
   animation,
+  isDragging,
 }: Props) {
-  // console.log("refreshed piece", index);
-
   const [fade] = useState(new Animated.Value(1));
   const pan = useRef(new Animated.ValueXY()).current;
 
@@ -53,15 +52,11 @@ export default function Piece({
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
         const result = drop.current({ end, type: "drag" });
 
-        pan.flattenOffset();
-
         if (!result) {
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: true,
-          }).start(() => {
-            pan.extractOffset();
-          });
+          }).start(() => pan.extractOffset());
         } else {
           setDrag(null);
           pan.extractOffset();
@@ -72,8 +67,8 @@ export default function Piece({
 
   useEffect(() => {
     if (animation) {
-      // console.log("piece anim: ", animation);
       if (animation.to < 0) {
+        // fade out
         const fadeAnim = Animated.timing(fade, {
           toValue: 0,
           useNativeDriver: true,
@@ -87,6 +82,7 @@ export default function Piece({
           fadeAnim.stop();
         });
       } else {
+        // move piece
         const goTo = {
           x: animation.end.x - animation.start.x,
           y: animation.end.y - animation.start.y,
@@ -118,7 +114,7 @@ export default function Piece({
       className="w-[12.5%] h-[12.5%] flex text-center items-center justify-center relative"
       style={{
         transform: [{ translateX: pan.x }, { translateY: pan.y }],
-        zIndex: animation?.from === index ? 20 : 0,
+        zIndex: animation?.from === index || isDragging ? 20 : 0,
         opacity: fade,
       }}
       {...panResponder.panHandlers}

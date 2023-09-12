@@ -10,7 +10,7 @@ export default function HomePage() {
     <View className="flex items-center p-5 space-y-10">
       <View className="flex items-center">
         <Text>Game</Text>
-        <ChessGame flip={flip} startFEN={testFEN3} />
+        <ChessGame flip={flip} />
       </View>
       <View>
         <Pressable onPress={() => setFlip(!flip)}>

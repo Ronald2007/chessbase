@@ -1,4 +1,4 @@
-import { PieceMoveAnimation } from "@/types";
+import { LayoutRect, PieceMoveAnimation } from "@/types";
 import React, { useEffect, useState } from "react";
 import { View, Animated } from "react-native";
 import { PieceSVG } from "./lib/pieces";
@@ -6,11 +6,18 @@ import { ANIMATION_DURATION } from "./lib/settings";
 
 interface Props {
   index: number;
+  layoutRect: LayoutRect;
   animation?: PieceMoveAnimation;
 }
 
-export default function Empty({ index, animation }: Props): JSX.Element {
+export default function Empty({
+  index,
+  animation,
+  layoutRect,
+}: Props): JSX.Element {
   const [fade] = useState(new Animated.Value(0));
+  const dx = (index % 10) * ((layoutRect.width - 2) / 8);
+  const dy = Math.floor(index / 10) * ((layoutRect.height - 2) / 8);
 
   useEffect(() => {
     if (animation && animation.from < 0) {
@@ -22,8 +29,12 @@ export default function Empty({ index, animation }: Props): JSX.Element {
 
       fadeAnim.start(() => {
         fade.setValue(0);
+        fade.extractOffset();
+        animation = undefined;
         fadeAnim.stop();
       });
+    } else {
+      fade.stopAnimation();
     }
   }, [animation]);
 
@@ -31,16 +42,7 @@ export default function Empty({ index, animation }: Props): JSX.Element {
     <View
       key={index}
       className="w-[12.5%] h-[12.5%] flex text-center items-center justify-center absolute"
-      style={{
-        transform: [
-          {
-            translateX: (index % 10) * ((320 - 2) / 8),
-          },
-          {
-            translateY: Math.floor(index / 10) * ((320 - 2) / 8),
-          },
-        ],
-      }}
+      style={{ transform: [{ translateX: dx }, { translateY: dy }] }}
     >
       {animation && animation.from < 0 && animation.to === index && (
         <Animated.View style={{ opacity: fade }}>

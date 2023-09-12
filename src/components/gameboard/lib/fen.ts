@@ -1,6 +1,5 @@
 import { FENarray, GameBoard, GamePosition } from "@/types";
 
-// const [pfen, turn, cr, target, hm, fm] = fen.split(" ");
 export function convertFENtoBoard(fen: string) {
   const pfen = fen.split(" ")[0];
   if (!pfen) return;
@@ -63,6 +62,7 @@ export function convertBoardtoFEN(board: GameBoard): string {
   return fen;
 }
 
+/* Converts fen to game */
 export function convertFENtoGame(fen: string): GamePosition | undefined {
   const fenValues = fen.split(" ") as FENarray;
   if (fenValues.length !== 6) return;

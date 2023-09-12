@@ -1,4 +1,4 @@
-import { StatusBar, View, Animated } from "react-native";
+import { View } from "react-native";
 import {
   DropEndInfo,
   DropResult,
@@ -11,7 +11,6 @@ import {
   PieceMove,
   PieceMoveAnimation,
 } from "@/types";
-import Square from "./Square";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { findAllMoves } from "./lib/moves";
 import {
@@ -31,8 +30,8 @@ import {
 } from "./lib/settings";
 import Piece from "./Piece";
 import BrownBoard from "@/../assets/boards/brown.svg";
-import { PieceSVG } from "./lib/pieces";
 import Empty from "./Empty";
+import HighlightSquare from "./HighlightSquare";
 
 interface Props {
   position: GameMove;
@@ -44,55 +43,45 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
   const [drag, setDrag] = useState<SquarePoint | null>(null);
   const [allMoves, setAllMoves] = useState<Record<number, Move[]>>({});
   const [animations, setAnimations] = useState<PieceMove[]>([]);
-  const [layoutRect, setLayoutRect] = useState<LayoutRect>();
-  const animationTimeout = useRef<NodeJS.Timeout>();
+  const animationTimeoutRef = useRef<NodeJS.Timeout>();
   const skipAnimsRef = useRef<boolean>(false);
-  const boardViewRef = useRef<View | null>(null);
-  const prevBoard = useRef<GameBoard>(convertFENtoBoard(testFEN4)!);
+  const prevBoard = useRef<GameBoard>(convertFENtoBoard(testFEN1)!);
   const [board, setBoard] = useState(prevBoard.current ?? position.board);
+  const updateBoard = () => {
+    clearInterval(animationTimeoutRef.current);
+    setAnimations([]);
+    setBoard(position.board);
+    animationTimeoutRef.current = undefined;
+    skipAnimsRef.current = false;
+  };
+  const [layoutRect, setLayoutRect] = useState<LayoutRect>();
+  const boardViewRef = useRef<View | null>(null);
 
+  /* Sets timeout for animations to occur when position changes */
   useEffect(() => {
-    setAllMoves(findAllMoves(position.board, position.turn, position));
+    setAllMoves(findAllMoves(position));
     if (prevBoard.current) {
+      if (skipAnimsRef.current) return updateBoard();
       const anims = findDifferences(prevBoard.current, position.board);
-      // console.log("anims: ", anims);
-      if (skipAnimsRef.current) {
-        setAnimations([]);
-        setBoard(position.board);
-        skipAnimsRef.current = false;
-        return;
-      }
       setAnimations(anims);
-      animationTimeout.current = setTimeout(() => {
-        setAnimations([]);
-        setBoard(position.board);
-      }, ANIMATION_DURATION);
+
+      animationTimeoutRef.current = setTimeout(
+        () => updateBoard(),
+        ANIMATION_DURATION
+      );
     }
   }, [position]);
 
+  /* Updates board if piece is dragged and animations are not done  */
   useEffect(() => {
-    if (drag) {
-      // console.log(layoutRect);
-      if (animationTimeout.current) {
-        clearInterval(animationTimeout.current);
-        setAnimations([]);
-        setBoard(position.board);
-        animationTimeout.current = undefined;
-      }
+    if (drag && animationTimeoutRef.current) {
+      updateBoard();
     }
-  }, [drag]);
+  }, [drag, animationTimeoutRef]);
 
+  /* Sets layout values when component is mounted */
   useEffect(() => {
     if (layoutRect) return;
-    // boardViewRef.current?.measureInWindow((x, y, w, h) => {
-    //   console.log(x, y, w, h);
-    //   setLayoutRect({
-    //     x: x,
-    //     y: y,
-    //     height: h,
-    //     width: w,
-    //   });
-    // });
     boardViewRef.current?.measure((x, y, w, h, px, py) => {
       console.log(x, y, w, h, px, py);
       setLayoutRect({
@@ -102,14 +91,17 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
         width: w,
       });
     });
-  }, [boardViewRef]);
+  }, [boardViewRef, layoutRect]);
 
   /* Plays move */
-  function playMove(start: number, end: number, type: DropType) {
+  function playMove(start: number, end: number, type: DropType): boolean {
+    if (!isValidIndex(start) || !isValidIndex(end) || start === end)
+      return false;
     const possibleMoves = allMoves[start];
     const move = possibleMoves?.find((m) => m.to === end);
-    if (start === end || !move) return false;
+    if (!move) return false;
 
+    /* Create game move */
     const block = getSquare(board, move.from);
     const newPosition = makeMove(board, move, position);
     const newMove = {
@@ -120,13 +112,15 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
       fm: !position.turn ? position.fm + 1 : position.fm,
       hm: block?.piece === "p" ? 0 : position.hm,
     };
-    position.turn = newMove.turn;
-    prevBoard.current = board;
-    if (type === "drag") {
-      skipAnimsRef.current = true;
-    }
-    addMove({ ...newMove, fen: convertBoardtoFEN(newMove.board) });
+    const boardFEN = convertBoardtoFEN(newMove.board);
+    if (!boardFEN) return false;
 
+    // sets previous board to be able to animate
+    prevBoard.current = board;
+    // if piece was dragged, skip animations
+    skipAnimsRef.current = type === "drag";
+    setAllMoves({});
+    addMove({ ...newMove, fen: boardFEN });
     return true;
   }
 
@@ -166,20 +160,15 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
     const start_row = Math.floor(drag.payload.index / 10);
     const start_col = drag.payload.index % 10;
     const start_index = start_row * 10 + start_col;
-
     const { x: startXCenter, y: startYCenter } = convertIndexToPoint(
       start_index,
       layoutRect,
       !!flip
     );
 
-    if (start_index === end_index) {
-      return;
-    }
+    if (start_index === end_index) return;
 
-    if (!isValidIndex(start_index) || !isValidIndex(end_index)) {
-      return;
-    }
+    if (!isValidIndex(start_index) || !isValidIndex(end_index)) return;
 
     const result = playMove(start_index, end_index, event.type);
     if (!result) return;
@@ -195,6 +184,7 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
     };
   }
 
+  /* Otherwise drop function uses old values */
   const dp = useRef<typeof drop>(drop);
   useEffect(() => {
     dp.current = drop;
@@ -206,66 +196,46 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
       ref={boardViewRef}
       onStartShouldSetResponderCapture={(e) => {
         const point = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-
         const result = dp.current({ end: point, type: "touch" });
         if (!result) {
           setDrag(null);
           return true;
         }
-
         return false;
       }}
     >
+      {/* Board SVG */}
       <BrownBoard className="absolute" />
+
+      {/* Drag indication */}
       {drag && layoutRect && (
-        <View
-          className="w-[12.5%] h-[12.5%] bg-red-500 absolute"
-          style={{
-            transform: [
-              {
-                translateX:
-                  (drag.payload.index % 10) * ((layoutRect.width - 2) / 8),
-              },
-              {
-                translateY:
-                  Math.floor(drag.payload.index / 10) *
-                  ((layoutRect.height - 2) / 8),
-              },
-            ],
-          }}
+        <HighlightSquare
+          index={drag.payload.index}
+          layoutRect={layoutRect}
+          type="start"
         />
       )}
 
+      {/* Possible squares for piece to move to */}
       {drag &&
         layoutRect &&
         allMoves[drag.payload.index]?.map((move) => (
-          <View
+          <HighlightSquare
             key={move.to}
-            className="w-[12.6%] h-[12.6%] bg-yellow-300 absolute"
-            style={{
-              transform: [
-                {
-                  translateX: (move.to % 10) * ((layoutRect.width - 2) / 8),
-                },
-                {
-                  translateY:
-                    Math.floor(move.to / 10) * ((layoutRect.height - 2) / 8),
-                },
-              ],
-            }}
+            index={move.to}
+            layoutRect={layoutRect}
+            type="possible"
           />
         ))}
 
+      {/* Renders all pieces and empty squares */}
       {(flip ? [...board].reverse() : board).map((row) =>
         (flip ? [...row].reverse() : row).map((sqr) => {
           const { piece, id, color, index } = sqr;
-          const pieceMove = animations.find((anim) => {
-            if (anim.from === index) return true;
-            // else if (anim.from < 0) {
-            //   return anim.to === index;
-            // }
-          });
-          // const pieceMove = pmidx >= 0 ? animations[pmidx] : undefined;
+          // animation for moving and fading out
+          const pieceMove = animations.find((anim) => anim.from === index);
+          const isDragging = drag?.payload.index === index;
+
           const moveAnimation: PieceMoveAnimation | undefined = pieceMove &&
             layoutRect && {
               ...pieceMove,
@@ -273,13 +243,10 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
               end: convertIndexToPoint(pieceMove.to, layoutRect, !!flip),
             };
 
-          const appear = animations.find((anim) => {
-            if (anim.from < 0 && anim.to === index) return true;
-            // else if (anim.from < 0) {
-            //   return anim.to === index;
-            // }
-          });
-          // const pieceMove = pmidx >= 0 ? animations[pmidx] : undefined;
+          // animation for fading in pieces
+          const appear = animations.find(
+            (anim) => anim.from < 0 && anim.to === index
+          );
           const appearAnimation: PieceMoveAnimation | undefined = appear &&
             layoutRect && {
               ...appear,
@@ -289,6 +256,7 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
 
           return (
             <Fragment key={index}>
+              {/* Renders piece or empty square */}
               {useMemo(() => {
                 return piece && id && color !== undefined ? (
                   <Piece
@@ -300,18 +268,21 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
                     setDrag={setDrag}
                     drop={dp}
                     animation={moveAnimation}
+                    isDragging={isDragging}
                   />
                 ) : (
                   <View
                     key={index}
                     className="w-[12.5%] h-[12.5%] flex text-center items-center justify-center relative"
-                  ></View>
+                  />
                 );
-              }, [piece, color, moveAnimation, id])}
-              {appearAnimation && (
+              }, [piece, color, moveAnimation, id, isDragging])}
+              {/* Renders square for fading in piece */}
+              {appearAnimation && layoutRect && (
                 <Empty
                   key={100 + index}
                   index={index}
+                  layoutRect={layoutRect}
                   animation={appearAnimation}
                 />
               )}
