@@ -1,5 +1,3 @@
-clean up
-
-promotion, fix flip, reset, highlight squares, ghosting on drag
+reset, highlight squares, ghosting on drag
 
 move playback

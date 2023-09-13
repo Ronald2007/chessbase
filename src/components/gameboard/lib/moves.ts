@@ -1,4 +1,4 @@
-import { BoardSquare, GameBoard, GameMove, Move } from "@/types";
+import { BoardSquare, GameBoard, GameMove, Move, MoveType } from "@/types";
 import { getSquare, isValidIndex, makeMove } from "./utils";
 import { letters, numbers } from "./settings";
 
@@ -179,6 +179,8 @@ export function findPawnMoves(
   const colorValue = sqr.color ? 1 : -1;
   const row = Math.floor(sqr.index / 10);
 
+  if (row === 0 || row === 7) return [];
+
   /* Advances */
   const frontSqr = board[row - colorValue][sqr.index % 10];
   if (!frontSqr?.piece) {
@@ -216,6 +218,13 @@ export function findPawnMoves(
       });
     }
   }
+
+  moves.forEach((move) => {
+    const currRow = Math.floor(move.to / 10);
+    if (currRow === 7 || currRow === 0) {
+      move.type = "promotion";
+    }
+  });
 
   /* Enpassant */
   if (!(target?.length === 2)) return moves;

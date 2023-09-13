@@ -30,8 +30,9 @@ export type SquarePoint = { point: Point; payload: BoardSquare };
 export type Move = {
   from: number;
   to: number;
-  type: "normal" | "castle" | "enpassant";
+  type: MoveType;
 };
+export type MoveType = "normal" | "castle" | "enpassant" | "promotion";
 
 export type GameMove = GamePosition & { prevMove?: Move };
 
@@ -45,7 +46,7 @@ export type DropResult = {
   type: DropType;
 };
 
-export type DropType = "touch" | "drag";
+export type DropType = "touch" | "drag" | "promotion";
 
 export interface LayoutRect {
   x: number;
@@ -59,11 +60,19 @@ export type PieceMove = {
   to: number;
   from: number;
   payload: Required<BoardSquare>;
+  skip?: boolean;
 };
 
 export type PieceMoveAnimation = PieceMove & {
   start: Point;
   end: Point;
+};
+
+export type Promotion = {
+  from: number;
+  to: number;
+  newMove: GameMove;
+  piece?: string;
 };
 
 // utilities

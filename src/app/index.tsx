@@ -1,7 +1,11 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import ChessGame from "@/components/gameboard/ChessGame";
 import { useState } from "react";
-import { testFEN3 } from "@/components/gameboard/lib/settings";
+import {
+  promoteFEN,
+  promoteFEN1,
+  testFEN3,
+} from "@/components/gameboard/lib/settings";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);
@@ -10,12 +14,15 @@ export default function HomePage() {
     <View className="flex items-center p-5 space-y-10">
       <View className="flex items-center">
         <Text>Game</Text>
-        <ChessGame flip={flip} />
+        <ChessGame flip={flip} startFEN={promoteFEN1} />
       </View>
       <View>
-        <Pressable onPress={() => setFlip(!flip)}>
+        <TouchableOpacity
+          className="py-2 px-5 bg-gray-200"
+          onPress={() => setFlip(!flip)}
+        >
           <Text>Flip</Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     </View>
   );

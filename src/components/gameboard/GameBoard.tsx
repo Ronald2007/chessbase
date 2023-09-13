@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, StatusBar } from "react-native";
 import {
   DropEndInfo,
   DropResult,
@@ -10,6 +10,7 @@ import {
   GameBoard,
   PieceMove,
   PieceMoveAnimation,
+  Promotion,
 } from "@/types";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { findAllMoves } from "./lib/moves";
@@ -32,6 +33,7 @@ import Piece from "./Piece";
 import BrownBoard from "@/../assets/boards/brown.svg";
 import Empty from "./Empty";
 import HighlightSquare from "./HighlightSquare";
+import SelectPromotion from "./SelectPromotion";
 
 interface Props {
   position: GameMove;
@@ -45,7 +47,7 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
   const [animations, setAnimations] = useState<PieceMove[]>([]);
   const animationTimeoutRef = useRef<NodeJS.Timeout>();
   const skipAnimsRef = useRef<boolean>(false);
-  const prevBoard = useRef<GameBoard>(convertFENtoBoard(testFEN1)!);
+  const prevBoard = useRef<GameBoard | undefined>();
   const [board, setBoard] = useState(prevBoard.current ?? position.board);
   const updateBoard = () => {
     clearInterval(animationTimeoutRef.current);
@@ -56,6 +58,7 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
   };
   const [layoutRect, setLayoutRect] = useState<LayoutRect>();
   const boardViewRef = useRef<View | null>(null);
+  const [promotion, setPromotion] = useState<Promotion>();
 
   /* Sets timeout for animations to occur when position changes */
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
 
   /* Updates board if piece is dragged and animations are not done  */
   useEffect(() => {
-    if (drag && animationTimeoutRef.current) {
+    if (drag) {
       updateBoard();
     }
   }, [drag, animationTimeoutRef]);
@@ -86,41 +89,85 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
       console.log(x, y, w, h, px, py);
       setLayoutRect({
         x: px,
-        y: py,
+        y: py, //+ (StatusBar.currentHeight ?? 0),
         height: h,
         width: w,
       });
     });
   }, [boardViewRef, layoutRect]);
 
+  /* Handle promotion */
+  useEffect(() => {
+    if (promotion && promotion.piece) {
+      const { from, to, newMove, piece } = promotion;
+      newMove.board[Math.floor(to / 10)][promotion.to % 10] = {
+        index: to,
+        piece,
+        color: position.turn,
+        id: `${position.turn ? piece.toUpperCase() : piece}2`,
+      };
+
+      // sets previous board to be able to animate
+      prevBoard.current = board;
+      // if piece was dragged, skip animations
+      skipAnimsRef.current = true;
+      setAllMoves({});
+      addMove({ ...newMove });
+      setPromotion(undefined);
+      setDrag(null);
+    } else if (!promotion) {
+      setAllMoves(findAllMoves(position));
+      setAnimations([]);
+    }
+  }, [promotion]);
+
   /* Plays move */
   function playMove(start: number, end: number, type: DropType): boolean {
     if (!isValidIndex(start) || !isValidIndex(end) || start === end)
       return false;
     const possibleMoves = allMoves[start];
+    console.log(possibleMoves);
     const move = possibleMoves?.find((m) => m.to === end);
     if (!move) return false;
 
     /* Create game move */
     const block = getSquare(board, move.from);
+    if (!block || !block.id || !block.piece) return false;
+
     const newPosition = makeMove(board, move, position);
-    const newMove = {
+    const newMove: GameMove = {
       board: newPosition.board,
       cr: newPosition.cr,
       target: newPosition.target,
       turn: !position.turn,
       fm: !position.turn ? position.fm + 1 : position.fm,
-      hm: block?.piece === "p" ? 0 : position.hm,
+      hm: block.piece === "p" ? 0 : position.hm,
+      fen: convertBoardtoFEN(newPosition.board),
     };
-    const boardFEN = convertBoardtoFEN(newMove.board);
-    if (!boardFEN) return false;
+
+    if (move.type === "promotion") {
+      setAnimations([
+        {
+          id: block.id,
+          // from: type === "drag" ? move.to : move.from,
+          from: move.from,
+          to: move.to,
+          payload: block as any,
+          skip: type === "drag",
+        },
+      ]);
+      setAllMoves([]);
+      setPromotion({ to: move.to, from: move.from, newMove });
+      return false;
+    }
 
     // sets previous board to be able to animate
     prevBoard.current = board;
     // if piece was dragged, skip animations
     skipAnimsRef.current = type === "drag";
+    setAnimations([]);
     setAllMoves({});
-    addMove({ ...newMove, fen: boardFEN });
+    addMove({ ...newMove });
     return true;
   }
 
@@ -147,6 +194,19 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
     const end_sqr = getSquare(board, end_index);
 
     if (!end_sqr) return;
+
+    if (promotion) {
+      // clicked on piece selection
+      if (
+        end_col === promotion.to % 10 &&
+        Math.abs(promotion.to - end_index) < 40
+      ) {
+        return {} as any;
+      } else {
+        setAnimations([]);
+        setPromotion(undefined);
+      }
+    }
 
     if (end_sqr.color === position.turn && event.type === "touch") {
       setDrag({ point: end, payload: end_sqr });
@@ -192,7 +252,7 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
 
   return (
     <View
-      className="bg-gray-200 flex flex-row flex-wrap w-full aspect-square border border-zinc-100 relative"
+      className="bg-gray-200 flex flex-row flex-wrap w-full aspect-square border border-zinc-100 relative overflow-hidden"
       ref={boardViewRef}
       onStartShouldSetResponderCapture={(e) => {
         const point = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
@@ -203,9 +263,22 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
         }
         return false;
       }}
+      onMoveShouldSetResponderCapture={() => !drag}
     >
       {/* Board SVG */}
       <BrownBoard className="absolute" />
+
+      {/* Promotion */}
+      {promotion && layoutRect && (
+        <SelectPromotion
+          index={promotion.to}
+          layoutRect={layoutRect}
+          selectPiece={(piece) => {
+            if (!promotion) return;
+            setPromotion({ ...promotion, piece });
+          }}
+        />
+      )}
 
       {/* Drag indication */}
       {drag && layoutRect && (

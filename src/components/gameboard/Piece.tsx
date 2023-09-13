@@ -34,6 +34,7 @@ export default function Piece({
 }: Props) {
   const [fade] = useState(new Animated.Value(1));
   const pan = useRef(new Animated.ValueXY()).current;
+  const [panValues, setPanValues] = useState<Point>({ x: 0, y: 0 });
 
   const panResponder = useRef(
     PanResponder.create({
@@ -44,6 +45,8 @@ export default function Piece({
         return true;
       },
       onPanResponderMove: (e, g) => {
+        setPanValues({ x: g.dx, y: g.dy });
+
         return Animated.event([null, { dx: pan.x, dy: pan.y }], {
           useNativeDriver: false,
         })(e, g);
@@ -82,10 +85,15 @@ export default function Piece({
           fadeAnim.stop();
         });
       } else {
-        // move piece
+        // move out
+        const promoting =
+          animation?.payload.piece === "p" &&
+          (Math.floor(animation.to / 10) === 0 ||
+            Math.floor(animation.to / 10) === 7);
+
         const goTo = {
-          x: animation.end.x - animation.start.x,
-          y: animation.end.y - animation.start.y,
+          x: animation.end.x - animation.start.x - panValues.x,
+          y: animation.end.y - animation.start.y - panValues.y,
         };
 
         const anim = Animated.timing(pan, {
@@ -95,6 +103,7 @@ export default function Piece({
         });
 
         anim.start(() => {
+          if (promoting) return;
           pan.setValue({ x: 0, y: 0 });
           pan.extractOffset();
           animation = undefined;
@@ -102,8 +111,13 @@ export default function Piece({
         });
       }
     } else {
-      fade.stopAnimation();
+      pan.setValue({ x: panValues.x * -1, y: panValues.y * -1 });
+      pan.extractOffset();
+      pan.resetAnimation();
       pan.stopAnimation();
+      fade.resetAnimation();
+      fade.stopAnimation();
+      setPanValues({ x: 0, y: 0 });
     }
   }, [animation]);
 

@@ -11,6 +11,12 @@ export const testFEN3 =
 export const testFEN4 =
   "2qb3R/rn3kPB/pR3n1p/P2P2bK/2p1P3/1PBPp1pP/1NrppPp1/3N2Q1 w - - 0 1";
 
+export const promoteFEN =
+  "rnb1kbnr/pppp2Pp/4pq2/8/8/8/PPPP1PPP/RNBQKBNR w - - 0 1";
+
+export const promoteFEN1 =
+  "rnbqkbnr/pppppp1p/8/8/8/8/PPPPPPpP/RNBQKBNR w - - 0 1";
+
 // Do not modify order
 export const letters = ["a", "b", "c", "d", "e", "f", "g", "h"];
 export const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
