@@ -159,18 +159,32 @@ export function convertIndexToPoint(
   layoutRect: LayoutRect,
   flip: boolean
 ): Point {
-  const row = Math.floor(index / 10);
-  const col = index % 10;
-  const block_height = layoutRect.height / 8;
-  const block_width = layoutRect.width / 8;
+  const row = Math.abs((flip ? 7 : 0) - Math.floor(index / 10));
+  const col = Math.abs((flip ? 7 : 0) - (index % 10));
+  const block_height = (layoutRect.height - layoutRect.border) / 8;
+  const block_width = (layoutRect.width - layoutRect.border) / 8;
   const point: Point = {
-    x:
-      Math.abs((flip ? layoutRect.width : 0) - col * block_width) +
-      layoutRect.x,
-    y:
-      Math.abs((flip ? layoutRect.height : 0) - row * block_height) +
-      layoutRect.y,
+    x: col * block_width + layoutRect.x,
+    y: row * block_height + layoutRect.y,
   };
 
   return point;
+}
+
+export function convertPointToIndex(
+  point: Point,
+  layoutRect: LayoutRect,
+  flip: boolean
+): number {
+  const row = Math.floor(
+    (point.y - layoutRect.y) / ((layoutRect.height - layoutRect.border) / 8)
+  );
+  const col = Math.floor(
+    (point.x - layoutRect.x) / ((layoutRect.width - layoutRect.border) / 8)
+  );
+
+  const index = row * 10 + col;
+
+  return Math.abs((flip ? 77 : 0) - index);
+  // return index;
 }

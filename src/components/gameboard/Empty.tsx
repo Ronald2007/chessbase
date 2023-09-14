@@ -16,8 +16,9 @@ export default function Empty({
   layoutRect,
 }: Props): JSX.Element {
   const [fade] = useState(new Animated.Value(0));
-  const dx = (index % 10) * ((layoutRect.width - 2) / 8);
-  const dy = Math.floor(index / 10) * ((layoutRect.height - 2) / 8);
+  const dx = (index % 10) * ((layoutRect.width - layoutRect.border) / 8);
+  const dy =
+    Math.floor(index / 10) * ((layoutRect.height - layoutRect.border) / 8);
 
   useEffect(() => {
     if (animation && animation.from < 0) {

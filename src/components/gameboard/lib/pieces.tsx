@@ -27,11 +27,11 @@ type Props = Omit<SvgProps, "color"> & {
 export function PieceSVG({ piece, color, ...props }: Props) {
   const pieceIdx = pieces.findIndex((p) => p === piece);
   if (pieceIdx < 0) {
-    return <Text>-1</Text>;
+    return <></>;
   }
 
   const SVGPieces = [WR, WN, WB, WQ, WK, WP, BR, BN, BB, BQ, BK, BP];
   const Piece = SVGPieces[pieceIdx + (color ? 0 : 6)];
 
-  return <Piece {...props} />;
+  return <Piece {...props} width="100%" height="100%" />;
 }

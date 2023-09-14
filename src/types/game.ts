@@ -53,6 +53,7 @@ export interface LayoutRect {
   y: number;
   width: number;
   height: number;
+  border: number;
 }
 
 export type PieceMove = {
@@ -73,6 +74,7 @@ export type Promotion = {
   to: number;
   newMove: GameMove;
   piece?: string;
+  payload: BoardSquare;
 };
 
 // utilities

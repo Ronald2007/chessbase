@@ -6,6 +6,7 @@ import {
   DropEndInfo,
   DropResult,
   DropType,
+  LayoutRect,
   PieceMoveAnimation,
   Point,
   SquarePoint,
@@ -20,6 +21,8 @@ interface Props {
   drop: React.MutableRefObject<(event: DropEndInfo) => DropResult | undefined>;
   animation?: PieceMoveAnimation;
   isDragging: boolean;
+  setOver: React.Dispatch<React.SetStateAction<Point | null>>;
+  layoutRect: LayoutRect;
 }
 
 export default function Piece({
@@ -31,6 +34,8 @@ export default function Piece({
   drop,
   animation,
   isDragging,
+  setOver,
+  layoutRect,
 }: Props) {
   const [fade] = useState(new Animated.Value(1));
   const pan = useRef(new Animated.ValueXY()).current;
@@ -45,13 +50,32 @@ export default function Piece({
         return true;
       },
       onPanResponderMove: (e, g) => {
+        if (g.moveX > layoutRect.width + layoutRect.x) {
+          g.dx = layoutRect.width + layoutRect.x - g.x0;
+          // g.dx = panValues.x;
+        }
+        if (g.moveX < layoutRect.x) {
+          g.dx = layoutRect.x - g.x0;
+        }
+        if (g.moveY > layoutRect.height + layoutRect.y) {
+          g.dy = layoutRect.height + layoutRect.y - g.y0;
+          // g.dy = panValues.y;
+        }
+        if (g.moveY < layoutRect.y) {
+          g.dy = layoutRect.y - g.y0;
+        }
+
+        // console.log("dis: ", g.dx, g.dy);
+
         setPanValues({ x: g.dx, y: g.dy });
+        setOver({ x: g.dx, y: g.dy });
 
         return Animated.event([null, { dx: pan.x, dy: pan.y }], {
           useNativeDriver: false,
         })(e, g);
       },
       onPanResponderRelease: (e, g) => {
+        setOver(null);
         const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
         const result = drop.current({ end, type: "drag" });
 
@@ -121,13 +145,17 @@ export default function Piece({
     }
   }, [animation]);
 
+  // const listenerIdRef = useRef(pan.addListener(({x, y}) => {
+  //   if ()
+  // }))
+
   if (!pieces.includes(piece)) return <Text>-1</Text>;
 
   return (
     <Animated.View
       className="w-[12.5%] h-[12.5%] flex text-center items-center justify-center relative"
       style={{
-        transform: [{ translateX: pan.x }, { translateY: pan.y }],
+        transform: [{ translateX: pan.x }, { translateY: pan.y }, { scale: 1 }],
         zIndex: animation?.from === index || isDragging ? 20 : 0,
         opacity: fade,
       }}
