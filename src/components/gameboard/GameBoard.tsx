@@ -97,9 +97,10 @@ export default function ChessBoard({ position, addMove, flip }: Props) {
     if (layoutRect.height > 0) return;
     boardViewRef.current?.measure((x, y, w, h, px, py) => {
       console.log(x, y, w, h, px, py);
+      StatusBar.currentHeight ?? 0;
       setLayoutRect({
         x: px,
-        y: py + (StatusBar.currentHeight ?? 0),
+        y: py,
         height: h,
         width: w,
         border: 2,
