@@ -50,3 +50,10 @@ export type FENarray = [string, string, string, string, string, string];
 // export type Numbers = [1, 2, 3, 4, 5, 6, 7, 8];
 // export type Pieces = ["r", "n", "b", "q", "k", "p"];
 // export type Color = "w" | "b";
+
+export interface GameControl {
+  back: () => void;
+  forward: () => void;
+  goToMove: (moveNumber: number) => void;
+  reset: () => void;
+}

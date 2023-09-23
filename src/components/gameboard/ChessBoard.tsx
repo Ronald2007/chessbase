@@ -32,12 +32,14 @@ import FadeIn from "./FadeIn";
 interface Props {
   flip: boolean;
   position: GameMove;
+  playable: boolean;
   addMove: (newMove: GameMove) => void;
 }
 
 export default function ChessBoard({
   flip,
   position,
+  playable,
   addMove,
 }: Props): JSX.Element {
   const layoutRef = useRef<Layout>({ x: 0, y: 0, w: 0, h: 0 });
@@ -95,11 +97,11 @@ export default function ChessBoard({
     }, ANIMATION_DURATION);
   }, [position]);
 
-  useEffect(() => {
-    if (selected && animationTimeoutRef.current) {
-      updateBoard();
-    }
-  }, [selected, animationTimeoutRef.current]);
+  // useEffect(() => {
+  //   if (selected && animationTimeoutRef.current) {
+  //     updateBoard();
+  //   }
+  // }, [selected, animationTimeoutRef.current]);
 
   // only run when empty square are touched
   function handleTouch(e: GestureResponderEvent) {
@@ -145,7 +147,9 @@ export default function ChessBoard({
     }
     if (square.color !== position.turn) return false;
 
-    console.log(point);
+    if (animationTimeoutRef.current) {
+      updateBoard();
+    }
     setSelected({ point, sqr: sqr });
     return false;
   }
@@ -233,6 +237,7 @@ export default function ChessBoard({
         layoutRef.current = { x, y, h, w };
         setBoard([...board]);
       }}
+      onStartShouldSetResponderCapture={() => !playable}
       onStartShouldSetResponder={handleTouch}
     >
       <BoardSVG className="absolute -z-10" />

@@ -1,41 +1,52 @@
-import { GameMove } from "@/types";
-import { useEffect, useState } from "react";
+import { GameControl, GameMove } from "@/types";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { View, Text } from "react-native";
 import { initialFEN } from "./lib/settings";
 import { convertFENtoGame } from "./lib/fen";
 import ChessBoard from "./ChessBoard";
+import { numberClamp } from "./lib/utils";
 
 interface GameProps {
-  flip?: boolean;
   startFEN?: string;
-  move?: number;
-  onPlay?: (move: GameMove) => void;
+  flip?: boolean;
+  playable?: boolean;
+  onPlay?: (moves: GameMove[], newMove: GameMove) => void;
 }
 
-export default function ChessGame({
-  flip = false,
-  startFEN,
-  move = 0,
-  onPlay,
-}: GameProps) {
-  const [moves, setMoves] = useState<GameMove[]>([
-    convertFENtoGame(startFEN ?? initialFEN)!,
-  ]);
-  const [position, setPosition] = useState(moves[move]);
+export default forwardRef<GameControl, GameProps>(function ChessGame(
+  { startFEN, flip = false, playable = true, onPlay },
+  controlRef
+) {
+  const startPosition =
+    convertFENtoGame(startFEN ?? initialFEN) ?? convertFENtoGame(initialFEN)!;
+  const [moves, setMoves] = useState<GameMove[]>([startPosition]);
+  const [moveNumber, setMoveNumber] = useState(0);
 
-  useEffect(() => {
-    let num = 0;
-    if (!move || move < 0) {
-      num = 0;
-    } else if (move > moves.length - 1) {
-      num = moves.length - 1;
-    } else {
-      num = move ?? 0;
-    }
-    setPosition(moves[num]);
-  }, [move]);
+  useImperativeHandle(
+    controlRef,
+    () => ({
+      back: () => setMoveNumber((v) => moveNumberClamp(v - 1)),
+      forward: () => setMoveNumber((v) => moveNumberClamp(v + 1)),
+      goToMove: (num) => setMoveNumber(() => moveNumberClamp(num)),
+      reset: () => {
+        setMoves([convertFENtoGame(initialFEN)!]);
+        setMoveNumber(0);
+      },
+    }),
+    [moveNumber, setMoveNumber]
+  );
 
-  if (!position || !position.board) {
+  function moveNumberClamp(num: number) {
+    return numberClamp(num, moves.length - 1, 0);
+  }
+
+  function addMove(newMove: GameMove) {
+    onPlay?.(moves, newMove);
+    setMoves([...moves, newMove]);
+    setMoveNumber(moves.length);
+  }
+
+  if (!moves[moveNumber] || !moves[moveNumber].board) {
     return (
       <View className="bg-gray-200 flex w-full aspect-square border border-zinc-100 items-center justify-center">
         <Text>Could not display board</Text>
@@ -43,11 +54,12 @@ export default function ChessGame({
     );
   }
 
-  function addMove(newMove: GameMove) {
-    onPlay?.(newMove);
-    setMoves([...moves, newMove]);
-    setPosition(newMove);
-  }
-
-  return <ChessBoard flip={flip} position={position} addMove={addMove} />;
-}
+  return (
+    <ChessBoard
+      flip={flip}
+      position={moves[moveNumber]}
+      playable={playable}
+      addMove={addMove}
+    />
+  );
+});

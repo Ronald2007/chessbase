@@ -42,11 +42,12 @@ export default function Piece({
       e.stopPropagation();
       const canDrag = !moveOnDragRef.current(point, sqr, "start");
       if (!canMove || !canDrag) return false;
-      setIsDragging(true);
 
       return true;
     },
     onPanResponderMove: (_, g) => {
+      setIsDragging(true);
+
       // position of the touch, relative to board
       const curr = {
         x: point.x + g.dx * (flip ? -1 : 1) + offset.x,

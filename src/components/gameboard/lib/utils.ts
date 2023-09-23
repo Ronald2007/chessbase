@@ -171,3 +171,9 @@ export function convertIndexToPoint(index: number, layout: Layout): Point {
 
   return { x, y };
 }
+
+export function numberClamp(num: number, max: number, min: number = 0) {
+  if (num < min) return min;
+  else if (num > max) return max;
+  else return num;
+}
