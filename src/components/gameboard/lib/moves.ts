@@ -1,11 +1,4 @@
-import {
-  BoardSquare,
-  GameBoard,
-  GameMove,
-  Move,
-  MoveType,
-  PieceMoves,
-} from "@/types";
+import { BoardSquare, GameBoard, GameMove, Move, PieceMoves } from "@/types";
 import { getSquare, isValidIndex, makeMove } from "./utils";
 import { letters, numbers } from "./settings";
 
@@ -211,7 +204,7 @@ export function findPawnMoves(
   }
 
   /* Captures */
-  for (let i of [1, -1]) {
+  for (const i of [1, -1]) {
     const possibleCapture = board[row - colorValue][(sqr.index % 10) + i];
     if (
       possibleCapture &&
@@ -241,7 +234,7 @@ export function findPawnMoves(
   const targetIdx = trow * 10 + col;
   const targetPawnIdx = targetIdx + 10 * colorValue;
 
-  for (let i of [1, -1]) {
+  for (const i of [1, -1]) {
     const possibleCapture = board[row - colorValue][(sqr.index % 10) + i];
     const targetSqr = getSquare(board, targetPawnIdx);
     if (
@@ -277,8 +270,8 @@ export function isKingInCheck(
     let kingPosition: number | null = null;
     if (sqr.piece === "k") kingPosition = sqr.index;
     else {
-      for (let row of board) {
-        for (let col of row) {
+      for (const row of board) {
+        for (const col of row) {
           if (col && col.piece === "k" && col.color === sqr.color) {
             kingPosition = col.index;
           }
@@ -312,7 +305,7 @@ export function isKingInCheck(
 
   /* Check for knight threats */
   const knightThreats = findKnightMoves(tempBoard, dummyKingSqr);
-  for (let t of knightThreats) {
+  for (const t of knightThreats) {
     const tsqr = getSquare(tempBoard, t.to);
     if (tsqr && tsqr.piece === "n" && tsqr.color !== sqr.color) {
       return true;
@@ -321,7 +314,7 @@ export function isKingInCheck(
 
   /* Check for threats on columns or file */
   const rookThreats = findRookMoves(tempBoard, dummyKingSqr);
-  for (let t of rookThreats) {
+  for (const t of rookThreats) {
     const tsqr = getSquare(tempBoard, t.to);
     if (
       tsqr &&
@@ -334,7 +327,7 @@ export function isKingInCheck(
 
   /* Check for threats along diagonals */
   const bishopThreats = findBishopMoves(tempBoard, dummyKingSqr);
-  for (let t of bishopThreats) {
+  for (const t of bishopThreats) {
     const tsqr = getSquare(tempBoard, t.to);
     if (
       tsqr &&
@@ -348,7 +341,7 @@ export function isKingInCheck(
   /* Check for pawn threats, enpassant doesn't need to be checked */
   const colorValue = sqr.color ? 1 : -1;
   const kpos = dummyKingSqr.index;
-  for (let c of [-1, 1]) {
+  for (const c of [-1, 1]) {
     const tsqr = tempBoard[Math.floor(kpos / 10) - colorValue][(kpos % 10) + c];
     if (tsqr && tsqr.piece === "p" && tsqr.color !== sqr.color) {
       return true;
@@ -371,8 +364,8 @@ export function checkForChecks(
   let kingPosition: number | null = null;
   if (sqr.piece === "k") kingPosition = sqr.index;
   else {
-    for (let row of board) {
-      for (let col of row) {
+    for (const row of board) {
+      for (const col of row) {
         if (col && col.piece === "k" && col.color === sqr.color) {
           kingPosition = col.index;
         }
@@ -401,9 +394,9 @@ export function checkForChecks(
       }
 
       let toDelete = false;
-      for (let mi of [74, 4]) {
+      for (const mi of [74, 4]) {
         if (toDelete) break;
-        for (let increment of [1, -1]) {
+        for (const increment of [1, -1]) {
           if (
             move.from === mi &&
             move.to === move.from + 2 * increment &&
@@ -432,7 +425,7 @@ export function checkForChecks(
   }
 
   /* Delete moves that had checks */
-  for (let d of movesToDelete) {
+  for (const d of movesToDelete) {
     const idx = moves.findIndex((m) => m.to === d);
     if (idx > -1) {
       moves.splice(idx, 1);
@@ -447,8 +440,8 @@ export function findAllMoves(lastMove: GameMove) {
   const board = lastMove.board;
   const turn = lastMove.turn;
   const allMoves: PieceMoves[] = [];
-  for (let row of board) {
-    for (let sqr of row) {
+  for (const row of board) {
+    for (const sqr of row) {
       if (sqr.color === turn) {
         allMoves.push({
           index: sqr.index,

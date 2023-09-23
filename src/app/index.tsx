@@ -2,9 +2,9 @@ import { Text, TouchableOpacity, View } from "react-native";
 import ChessGame from "@/components/gameboard/ChessGame";
 import { useState } from "react";
 import {
-  promoteFEN,
-  promoteFEN1,
-  testFEN1,
+  // promoteFEN,
+  // promoteFEN1,
+  // testFEN1,
   testFEN3,
 } from "@/components/gameboard/lib/settings";
 

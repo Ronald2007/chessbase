@@ -1,18 +1,18 @@
 // Black
-import BB from "@/../assets/pieces/bb.svg";
-import BK from "@/../assets/pieces/bk.svg";
-import BQ from "@/../assets/pieces/bq.svg";
-import BN from "@/../assets/pieces/bn.svg";
-import BR from "@/../assets/pieces/br.svg";
-import BP from "@/../assets/pieces/bp.svg";
+import BB from "@/assets/pieces/bb.svg";
+import BK from "@/assets/pieces/bk.svg";
+import BQ from "@/assets/pieces/bq.svg";
+import BN from "@/assets/pieces/bn.svg";
+import BR from "@/assets/pieces/br.svg";
+import BP from "@/assets/pieces/bp.svg";
 
 // White
-import WK from "@/../assets/pieces/wk.svg";
-import WQ from "@/../assets/pieces/wq.svg";
-import WB from "@/../assets/pieces/wb.svg";
-import WN from "@/../assets/pieces/wn.svg";
-import WR from "@/../assets/pieces/wr.svg";
-import WP from "@/../assets/pieces/wp.svg";
+import WK from "@/assets/pieces/wk.svg";
+import WQ from "@/assets/pieces/wq.svg";
+import WB from "@/assets/pieces/wb.svg";
+import WN from "@/assets/pieces/wn.svg";
+import WR from "@/assets/pieces/wr.svg";
+import WP from "@/assets/pieces/wp.svg";
 import { pieces } from "./settings";
 import { SvgProps } from "react-native-svg";
 

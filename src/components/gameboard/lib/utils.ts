@@ -1,4 +1,5 @@
 import {
+  BoardSquare,
   GameBoard,
   GameMove,
   Layout,
@@ -97,7 +98,7 @@ export function makeMove(
     }
   }
   // check rook movement
-  for (let block of [start_block, end_block]) {
+  for (const block of [start_block, end_block]) {
     if (block.piece === "r") {
       if (block.color) {
         if (block.index === 77) cr = cr.replace("K", "");
@@ -128,7 +129,7 @@ export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
           animations.push({
             id: psqr.id,
             from: psqr.index,
-            payload: psqr as any,
+            payload: psqr as Required<BoardSquare>,
             to: -1,
           });
         } else {
@@ -143,7 +144,7 @@ export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
           animations.push({
             id: csqr.id,
             to: csqr.index,
-            payload: csqr as any,
+            payload: csqr as Required<BoardSquare>,
             from: -1,
           });
         } else {

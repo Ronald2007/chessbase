@@ -9,7 +9,7 @@ interface GameProps {
   flip?: boolean;
   startFEN?: string;
   move?: number;
-  onPlay?: (move: GameMove) => any;
+  onPlay?: (move: GameMove) => void;
 }
 
 export default function ChessGame({

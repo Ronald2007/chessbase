@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, GestureResponderEvent } from "react-native";
-import BoardSVG from "@/../assets/boards/brown.svg";
+import BoardSVG from "@/assets/boards/brown.svg";
 import {
   BoardSquare,
   GameMove,
@@ -20,7 +20,6 @@ import {
   getSquare,
   isValidIndex,
   makeMove,
-  flipBoard,
 } from "./lib/utils";
 import { convertGameToFEN } from "./lib/fen";
 import { findAllMoves } from "./lib/moves";
@@ -324,7 +323,7 @@ export default function ChessBoard({
               sqr.color !== undefined && (
                 <Piece
                   key={sqr.index}
-                  sqr={{ ...sqr } as any} // safe
+                  sqr={{ ...sqr } as Required<BoardSquare>} // safe
                   point={point}
                   moveOnDragRef={moveOnDragRef}
                   canMove={position.turn === sqr.color}
