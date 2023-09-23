@@ -43,7 +43,9 @@ export function makeMove(
 
   /* Update board */
   board[end_row][end_col] = { ...start_block, index: end_block.index };
-  board[start_row][start_col] = { index: start_block.index };
+  board[start_row][start_col] = {
+    index: start_block.index,
+  };
 
   /* Remove captured pawn by enpassant */
   if (move.type === "enpassant") {

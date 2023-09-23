@@ -1,3 +1,0 @@
-improve performance
-
-move playback

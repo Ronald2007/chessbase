@@ -49,5 +49,5 @@ export default function ChessGame({
     setPosition(newMove);
   }
 
-  return <ChessBoard position={position} addMove={addMove} />;
+  return <ChessBoard flip={flip} position={position} addMove={addMove} />;
 }

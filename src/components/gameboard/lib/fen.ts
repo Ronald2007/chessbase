@@ -15,7 +15,9 @@ export function convertFENtoBoard(fen: string) {
       row++;
     } else if (parseInt(pfen[i]) <= 8) {
       for (let j = 0; j < parseInt(pfen[i]); j++) {
-        board[row].push({ index: parseInt(`${row}${board[row].length}`) });
+        board[row].push({
+          index: parseInt(`${row}${board[row].length}`),
+        });
       }
     } else {
       pieceCount[pfen[i]] = (pieceCount[pfen[i]] ?? -1) + 1;

@@ -18,6 +18,7 @@ interface Props {
   setOver: React.Dispatch<React.SetStateAction<Point | undefined>>;
   size: { w: number; h: number };
   animation?: Animation;
+  flip: boolean;
 }
 
 export default function Piece({
@@ -28,6 +29,7 @@ export default function Piece({
   setOver,
   size,
   animation,
+  flip,
 }: Props): JSX.Element {
   const { id, index, color, piece } = sqr;
   const [isDragging, setIsDragging] = useState(false);
@@ -47,8 +49,8 @@ export default function Piece({
     onPanResponderMove: (_, g) => {
       // position of the touch, relative to board
       const curr = {
-        x: point.x + g.dx + offset.x,
-        y: point.y + g.dy + offset.y,
+        x: point.x + g.dx * (flip ? -1 : 1) + offset.x,
+        y: point.y + g.dy * (flip ? -1 : 1) + offset.y,
       };
 
       // clamp position
@@ -66,8 +68,8 @@ export default function Piece({
     onPanResponderEnd: (_, g) => {
       // position of the touch, relative to board
       const endPoint = {
-        x: point.x + g.dx + offset.x,
-        y: point.y + g.dy + offset.y,
+        x: point.x + g.dx * (flip ? -1 : 1) + offset.x,
+        y: point.y + g.dy * (flip ? -1 : 1) + offset.y,
       };
 
       setIsDragging(false);
@@ -137,6 +139,7 @@ export default function Piece({
           { translateX: pan.x },
           { translateY: pan.y },
           { scale: isDragging ? 1.5 : 1 },
+          { rotate: flip ? "180deg" : "0deg" },
         ],
         opacity: fadeOut,
       }}

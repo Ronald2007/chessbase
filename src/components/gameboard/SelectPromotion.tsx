@@ -7,12 +7,14 @@ interface Props {
   point: Point;
   color: boolean;
   selectPiece: (piece: string) => void;
+  flip: boolean;
 }
 
 export default function SelectPromotion({
   point,
   color,
   selectPiece,
+  flip,
 }: Props): JSX.Element {
   const pieces = ["q", "r", "b", "n"];
 
@@ -30,7 +32,9 @@ export default function SelectPromotion({
         return (
           <Pressable
             key={piece}
-            className={`w-full h-[25%] flex items-center justify-center border`}
+            className={`w-full h-[25%] flex items-center justify-center border ${
+              flip ? "rotate-180" : ""
+            }`}
             onPress={() => {
               selectPiece(piece);
             }}

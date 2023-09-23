@@ -20,6 +20,7 @@ import {
   getSquare,
   isValidIndex,
   makeMove,
+  flipBoard,
 } from "./lib/utils";
 import { convertGameToFEN } from "./lib/fen";
 import { findAllMoves } from "./lib/moves";
@@ -30,11 +31,16 @@ import { ANIMATION_DURATION } from "./lib/settings";
 import FadeIn from "./FadeIn";
 
 interface Props {
+  flip: boolean;
   position: GameMove;
   addMove: (newMove: GameMove) => void;
 }
 
-export default function ChessBoard({ position, addMove }: Props): JSX.Element {
+export default function ChessBoard({
+  flip,
+  position,
+  addMove,
+}: Props): JSX.Element {
   const layoutRef = useRef<Layout>({ x: 0, y: 0, w: 0, h: 0 });
   const [board, setBoard] = useState<GameBoard>(position.board);
   const [selected, setSelected] = useState<DragPayload>();
@@ -140,6 +146,7 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
     }
     if (square.color !== position.turn) return false;
 
+    console.log(point);
     setSelected({ point, sqr: sqr });
     return false;
   }
@@ -219,7 +226,9 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
 
   return (
     <View
-      className="w-full aspect-square relative flex flex-wrap flex-row bg-red-500"
+      className={`w-full aspect-square relative flex flex-wrap flex-row bg-red-500 ${
+        flip ? "rotate-180" : ""
+      }`}
       onLayout={(e) => {
         const { x, y, height: h, width: w } = e.nativeEvent.layout;
         layoutRef.current = { x, y, h, w };
@@ -276,7 +285,9 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
         )}
 
       {/* show faded piece at start square */}
-      {selected && <GhostPiece square={selected.sqr} point={selected.point} />}
+      {selected && (
+        <GhostPiece square={selected.sqr} point={selected.point} flip={flip} />
+      )}
 
       {/* promotion */}
       {promotion && (
@@ -287,6 +298,7 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
           )}
           color={position.turn}
           selectPiece={selectPiece}
+          flip={flip}
         />
       )}
 
@@ -294,7 +306,7 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
       {animations
         .filter((a) => a.from === -1)
         .map((animation) => (
-          <FadeIn key={animation.id} animation={animation} />
+          <FadeIn key={animation.id} animation={animation} flip={flip} />
         ))}
 
       {board.map((row) =>
@@ -312,7 +324,7 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
               sqr.color !== undefined && (
                 <Piece
                   key={sqr.index}
-                  sqr={sqr as any} // safe
+                  sqr={{ ...sqr } as any} // safe
                   point={point}
                   moveOnDragRef={moveOnDragRef}
                   canMove={position.turn === sqr.color}
@@ -322,9 +334,10 @@ export default function ChessBoard({ position, addMove }: Props): JSX.Element {
                     h: layoutRef.current.h / 8,
                   }}
                   animation={animation}
+                  flip={flip}
                 />
               ),
-            [sqr.id, point.x, point.y, position.turn, animation?.id]
+            [sqr.id, point.x, point.y, position.turn, animation?.id, flip]
           );
         })
       )}
