@@ -1,7 +1,7 @@
 import {
   GameBoard,
   GameMove,
-  LayoutRect,
+  Layout,
   Move,
   NewBoardProps,
   PieceMove,
@@ -154,37 +154,17 @@ export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
   return animations;
 }
 
-export function convertIndexToPoint(
-  index: number,
-  layoutRect: LayoutRect,
-  flip: boolean
-): Point {
-  const row = Math.abs((flip ? 7 : 0) - Math.floor(index / 10));
-  const col = Math.abs((flip ? 7 : 0) - (index % 10));
-  const block_height = (layoutRect.height - layoutRect.border) / 8;
-  const block_width = (layoutRect.width - layoutRect.border) / 8;
-  const point: Point = {
-    x: col * block_width + layoutRect.x,
-    y: row * block_height + layoutRect.y,
-  };
-
-  return point;
-}
-
-export function convertPointToIndex(
-  point: Point,
-  layoutRect: LayoutRect,
-  flip: boolean
-): number {
-  const row = Math.floor(
-    (point.y - layoutRect.y) / ((layoutRect.height - layoutRect.border) / 8)
-  );
-  const col = Math.floor(
-    (point.x - layoutRect.x) / ((layoutRect.width - layoutRect.border) / 8)
-  );
+export function convertPointToIndex(point: Point, layout: Layout) {
+  const row = Math.floor(Math.abs(point.y) / (layout.h / 8));
+  const col = Math.floor(Math.abs(point.x) / (layout.w / 8));
 
   const index = row * 10 + col;
+  return index;
+}
 
-  return Math.abs((flip ? 77 : 0) - index);
-  // return index;
+export function convertIndexToPoint(index: number, layout: Layout): Point {
+  const x = (index % 10) * (layout.w / 8);
+  const y = Math.floor(index / 10) * (layout.h / 8);
+
+  return { x, y };
 }

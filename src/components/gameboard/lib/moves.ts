@@ -1,4 +1,11 @@
-import { BoardSquare, GameBoard, GameMove, Move, MoveType } from "@/types";
+import {
+  BoardSquare,
+  GameBoard,
+  GameMove,
+  Move,
+  MoveType,
+  PieceMoves,
+} from "@/types";
 import { getSquare, isValidIndex, makeMove } from "./utils";
 import { letters, numbers } from "./settings";
 
@@ -373,10 +380,10 @@ export function checkForChecks(
     }
   }
   if (!kingPosition) return [];
-  const dummyKingSqr: BoardSquare = {
+  const dummyKingSqr: Required<BoardSquare> = {
     id: `${sqr.color ? "K" : "k"}0`,
     piece: "k",
-    color: sqr.color,
+    color: sqr.color ?? false,
     index: kingPosition,
   };
 
@@ -439,11 +446,14 @@ export function checkForChecks(
 export function findAllMoves(lastMove: GameMove) {
   const board = lastMove.board;
   const turn = lastMove.turn;
-  const allMoves: Record<number, Move[]> = {};
+  const allMoves: PieceMoves[] = [];
   for (let row of board) {
     for (let sqr of row) {
       if (sqr.color === turn) {
-        allMoves[sqr.index] = findMoves(board, sqr.index, lastMove);
+        allMoves.push({
+          index: sqr.index,
+          moves: findMoves(board, sqr.index, lastMove),
+        });
       }
     }
   }

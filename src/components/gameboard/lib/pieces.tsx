@@ -14,7 +14,6 @@ import WN from "@/../assets/pieces/wn.svg";
 import WR from "@/../assets/pieces/wr.svg";
 import WP from "@/../assets/pieces/wp.svg";
 import { pieces } from "./settings";
-import { Text } from "react-native";
 import { SvgProps } from "react-native-svg";
 
 export { WK, WQ, WB, WN, WR, WP, BK, BQ, BB, BN, BR, BP };

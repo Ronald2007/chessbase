@@ -4,12 +4,12 @@ import { useState } from "react";
 import {
   promoteFEN,
   promoteFEN1,
+  testFEN1,
   testFEN3,
 } from "@/components/gameboard/lib/settings";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);
-  const [key, setKey] = useState(Math.random());
   const [moveNumber, setMoveNumber] = useState(0);
 
   return (
@@ -17,52 +17,45 @@ export default function HomePage() {
       <View className="flex items-center">
         <Text>Game</Text>
         <ChessGame
-          key={key}
+          startFEN={testFEN3}
           flip={flip}
           move={moveNumber}
           onPlay={() => setMoveNumber((v) => v + 1)}
         />
       </View>
       <View className="flex-row w-full justify-around">
-        <View>
-          <TouchableOpacity
-            className="py-2 px-5 bg-gray-200"
-            onPress={() => setFlip(!flip)}
-          >
-            <Text>Flip</Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            className="py-2 px-5 bg-gray-200"
-            onPress={() => {
-              setKey(Math.random());
-              setMoveNumber(0);
-            }}
-          >
-            <Text>Reset</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          className="py-2 px-5 bg-gray-200"
+          onPress={() => setFlip(!flip)}
+        >
+          <Text>Flip</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="py-2 px-5 bg-gray-200"
+          onPress={() => {
+            setMoveNumber(0);
+          }}
+        >
+          <Text>Reset</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Arrows */}
       <View className="flex-row w-full justify-around">
-        <View>
-          <TouchableOpacity
-            className="py-2 px-5 bg-gray-200"
-            onPress={() => setMoveNumber((v) => (v > 0 ? v - 1 : 0))}
-          >
-            <Text>Back</Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            className="py-2 px-5 bg-gray-200"
-            onPress={() => setMoveNumber(moveNumber + 1)}
-          >
-            <Text>Forward</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Back arrow */}
+        <TouchableOpacity
+          className="py-2 px-5 bg-gray-200"
+          onPress={() => setMoveNumber((v) => v - 1)}
+        >
+          <Text>Back</Text>
+        </TouchableOpacity>
+        {/* Forward */}
+        <TouchableOpacity
+          className="py-2 px-5 bg-gray-200"
+          onPress={() => setMoveNumber((v) => v + 1)}
+        >
+          <Text>Forward</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

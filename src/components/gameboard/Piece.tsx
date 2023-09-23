@@ -1,163 +1,144 @@
-import { useEffect, useRef, useState } from "react";
-import { Text, PanResponder, Animated } from "react-native";
-import { ANIMATION_DURATION, pieces } from "./lib/settings";
+import { BoardSquare, Animation, Point } from "@/types";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, PanResponder } from "react-native";
 import { PieceSVG } from "./lib/pieces";
-import {
-  DropEndInfo,
-  DropResult,
-  DropType,
-  LayoutRect,
-  PieceMoveAnimation,
-  Point,
-  SquarePoint,
-} from "@/types";
+import { ANIMATION_DURATION } from "./lib/settings";
 
 interface Props {
-  piece: string;
-  color: boolean;
-  index: number;
-  id: string;
-  setDrag: React.Dispatch<React.SetStateAction<SquarePoint | null>>;
-  drop: React.MutableRefObject<(event: DropEndInfo) => DropResult | undefined>;
-  animation?: PieceMoveAnimation;
-  isDragging: boolean;
-  setOver: React.Dispatch<React.SetStateAction<Point | null>>;
-  layoutRect: LayoutRect;
+  sqr: Required<BoardSquare>;
+  point: Point;
+  moveOnDragRef: React.MutableRefObject<
+    (
+      point: Point,
+      square: Required<BoardSquare>,
+      type: "start" | "end"
+    ) => boolean
+  >;
+  canMove: boolean;
+  setOver: React.Dispatch<React.SetStateAction<Point | undefined>>;
+  size: { w: number; h: number };
+  animation?: Animation;
 }
 
 export default function Piece({
-  piece,
-  color,
-  index,
-  id: _,
-  setDrag,
-  drop,
-  animation,
-  isDragging,
+  sqr,
+  point,
+  moveOnDragRef,
+  canMove,
   setOver,
-  layoutRect,
-}: Props) {
-  const [fade] = useState(new Animated.Value(1));
+  size,
+  animation,
+}: Props): JSX.Element {
+  const { id, index, color, piece } = sqr;
+  const [isDragging, setIsDragging] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const offset = { x: size.w / 2, y: size.h / 2 };
+  const fadeOut = useRef(new Animated.Value(1)).current;
   const pan = useRef(new Animated.ValueXY()).current;
-  const [panValues, setPanValues] = useState<Point>({ x: 0, y: 0 });
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: (e) => {
+      e.stopPropagation();
+      const canDrag = !moveOnDragRef.current(point, sqr, "start");
+      if (!canMove || !canDrag) return false;
+      setIsDragging(true);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: (e, g) => {
-        const dis = { x: g.dx - g.x0, y: g.dy - g.y0 };
-        pan.setOffset(dis);
+      return true;
+    },
+    onPanResponderMove: (_, g) => {
+      // position of the touch, relative to board
+      const curr = {
+        x: point.x + g.dx + offset.x,
+        y: point.y + g.dy + offset.y,
+      };
 
-        return true;
-      },
-      onPanResponderMove: (e, g) => {
-        if (g.moveX > layoutRect.width + layoutRect.x) {
-          g.dx = layoutRect.width + layoutRect.x - g.x0;
-          // g.dx = panValues.x;
-        }
-        if (g.moveX < layoutRect.x) {
-          g.dx = layoutRect.x - g.x0;
-        }
-        if (g.moveY > layoutRect.height + layoutRect.y) {
-          g.dy = layoutRect.height + layoutRect.y - g.y0;
-          // g.dy = panValues.y;
-        }
-        if (g.moveY < layoutRect.y) {
-          g.dy = layoutRect.y - g.y0;
-        }
+      // clamp position
+      if (curr.y > size.h * 8) curr.y = size.h * 8;
+      if (curr.x > size.w * 8) curr.x = size.w * 8;
+      if (curr.y < 0) curr.y = 0;
+      if (curr.x < 0) curr.x = 0;
 
-        // console.log("dis: ", g.dx, g.dy);
+      setOver(curr);
 
-        setPanValues({ x: g.dx, y: g.dy });
-        setOver({ x: g.dx, y: g.dy });
+      Animated.event([{ x: pan.x, y: pan.y }], {
+        useNativeDriver: false,
+      })({ x: curr.x - point.x - offset.x, y: curr.y - point.y - offset.y });
+    },
+    onPanResponderEnd: (_, g) => {
+      // position of the touch, relative to board
+      const endPoint = {
+        x: point.x + g.dx + offset.x,
+        y: point.y + g.dy + offset.y,
+      };
 
-        return Animated.event([null, { dx: pan.x, dy: pan.y }], {
-          useNativeDriver: false,
-        })(e, g);
-      },
-      onPanResponderRelease: (e, g) => {
-        setOver(null);
-        const end = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
-        const result = drop.current({ end, type: "drag" });
+      setIsDragging(false);
+      setOver(undefined);
 
-        if (!result) {
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: true,
-          }).start(() => pan.extractOffset());
-        } else {
-          setDrag(null);
-          pan.extractOffset();
-        }
-      },
-    })
-  ).current;
+      const movePlayed = moveOnDragRef.current(endPoint, sqr, "end");
+      setIsAnimating(true);
+      if (!movePlayed) {
+        // spring back to start square
+        Animated.spring(pan, {
+          toValue: { x: 0, y: 0 },
+          useNativeDriver: true,
+        }).start(() => setIsAnimating(false));
+      } else {
+        // spring to new square so it is smooth
+        Animated.spring(pan, {
+          toValue: {
+            x: Math.floor(endPoint.x / size.w) * size.w - size.w * (index % 10),
+            y:
+              Math.floor(endPoint.y / size.h) * size.h -
+              size.h * Math.floor(index / 10),
+          },
+          useNativeDriver: true,
+        }).start(() => setIsAnimating(false));
+      }
+    },
+  });
 
   useEffect(() => {
-    if (animation) {
-      if (animation.to < 0) {
-        // fade out
-        const fadeAnim = Animated.timing(fade, {
-          toValue: 0,
-          useNativeDriver: true,
-          duration: ANIMATION_DURATION,
-        });
+    // reset values
+    pan.setValue({ x: 0, y: 0 });
+    fadeOut.setValue(1);
 
-        fadeAnim.start(() => {
-          fade.setValue(1);
-          fade.stopAnimation();
-          animation = undefined;
-          fadeAnim.stop();
-        });
-      } else {
-        // move out
-        const promoting =
-          animation?.payload.piece === "p" &&
-          (Math.floor(animation.to / 10) === 0 ||
-            Math.floor(animation.to / 10) === 7);
-
-        const goTo = {
-          x: animation.end.x - animation.start.x - panValues.x,
-          y: animation.end.y - animation.start.y - panValues.y,
-        };
-
-        const anim = Animated.timing(pan, {
-          toValue: goTo,
-          useNativeDriver: true,
-          duration: ANIMATION_DURATION,
-        });
-
-        anim.start(() => {
-          if (promoting) return;
-          pan.setValue({ x: 0, y: 0 });
-          pan.extractOffset();
-          animation = undefined;
-          anim.stop();
-        });
-      }
+    if (!animation || animation.id !== id) {
+      return;
+    }
+    if (animation.to >= 0) {
+      // piece move animation
+      setIsAnimating(true);
+      Animated.timing(pan, {
+        toValue: {
+          x: animation.end.x - animation.start.x,
+          y: animation.end.y - animation.start.y,
+        },
+        useNativeDriver: true,
+        duration: ANIMATION_DURATION,
+      }).start(() => setIsAnimating(false));
     } else {
-      pan.setValue({ x: panValues.x * -1, y: panValues.y * -1 });
-      pan.extractOffset();
-      pan.resetAnimation();
-      pan.stopAnimation();
-      fade.resetAnimation();
-      fade.stopAnimation();
-      setPanValues({ x: 0, y: 0 });
+      // fade out piece
+      Animated.timing(fadeOut, {
+        toValue: 0,
+        useNativeDriver: true,
+        duration: ANIMATION_DURATION,
+      }).start();
     }
   }, [animation]);
 
-  // const listenerIdRef = useRef(pan.addListener(({x, y}) => {
-  //   if ()
-  // }))
-
-  if (!pieces.includes(piece)) return <Text>-1</Text>;
-
   return (
     <Animated.View
-      className="w-[12.5%] h-[12.5%] flex text-center items-center justify-center relative"
+      key={index}
+      className="w-[12.5%] h-[12.5%] absolute"
       style={{
-        transform: [{ translateX: pan.x }, { translateY: pan.y }, { scale: 1 }],
-        zIndex: animation?.from === index || isDragging ? 20 : 0,
-        opacity: fade,
+        zIndex: isDragging || isAnimating ? 20 : 10,
+        left: point.x,
+        top: point.y,
+        transform: [
+          { translateX: pan.x },
+          { translateY: pan.y },
+          { scale: isDragging ? 1.5 : 1 },
+        ],
+        opacity: fadeOut,
       }}
       {...panResponder.panHandlers}
     >

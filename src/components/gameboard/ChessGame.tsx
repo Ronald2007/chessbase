@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { initialFEN } from "./lib/settings";
 import { convertFENtoGame } from "./lib/fen";
-import ChessBoard from "./GameBoard";
+import ChessBoard from "./ChessBoard";
 
 interface GameProps {
   flip?: boolean;
@@ -12,19 +12,27 @@ interface GameProps {
   onPlay?: (move: GameMove) => any;
 }
 
-export default function ChessGame({ flip, startFEN, move, onPlay }: GameProps) {
-  const [moveNumber, setMoveNumber] = useState(move ?? 0);
+export default function ChessGame({
+  flip = false,
+  startFEN,
+  move = 0,
+  onPlay,
+}: GameProps) {
   const [moves, setMoves] = useState<GameMove[]>([
     convertFENtoGame(startFEN ?? initialFEN)!,
   ]);
-  const [position, setPosition] = useState(moves[moveNumber]);
-
-  console.log("num", moveNumber);
+  const [position, setPosition] = useState(moves[move]);
 
   useEffect(() => {
-    // setPosition(moves[moveNumber]);
-    setMoveNumber(move ?? moveNumber);
-    setPosition(moves[move ?? moveNumber]);
+    let num = 0;
+    if (!move || move < 0) {
+      num = 0;
+    } else if (move > moves.length - 1) {
+      num = moves.length - 1;
+    } else {
+      num = move ?? 0;
+    }
+    setPosition(moves[num]);
   }, [move]);
 
   if (!position || !position.board) {
@@ -36,11 +44,10 @@ export default function ChessGame({ flip, startFEN, move, onPlay }: GameProps) {
   }
 
   function addMove(newMove: GameMove) {
-    console.log("new move added");
     onPlay?.(newMove);
     setMoves([...moves, newMove]);
     setPosition(newMove);
   }
 
-  return <ChessBoard position={position} addMove={addMove} flip={flip} />;
+  return <ChessBoard position={position} addMove={addMove} />;
 }

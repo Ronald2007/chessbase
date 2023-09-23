@@ -81,3 +81,15 @@ export function convertFENtoGame(fen: string): GamePosition | undefined {
     fm: parseInt(fm) ?? 0,
   };
 }
+
+export function convertGameToFEN(position: GamePosition) {
+  let fen = "";
+  fen += convertBoardtoFEN(position.board) + " ";
+  fen += (position.turn ? "w" : "b") + " ";
+  fen += (position.cr || "-") + " ";
+  fen += (position.target || "-") + " ";
+  fen += position.hm + " ";
+  fen += position.fm;
+
+  return fen;
+}
