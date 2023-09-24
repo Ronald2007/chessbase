@@ -5,6 +5,7 @@ import { GameControl, GameMove, Notation } from "@/types";
 import { baseController } from "@/lib/utils";
 import MoveNotation from "@/components/Notation";
 import GameControls from "@/components/GameControls";
+import Header from "@/components/Header";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);
@@ -28,7 +29,8 @@ export default function HomePage() {
 
   return (
     <View className="h-full w-full flex-col">
-      <View className="flex flex-grow items-center px-1 py-5 space-y-4">
+      <Header />
+      <View className="flex flex-grow items-center px-1 py-2 space-y-4">
         {/* Chess Game */}
         <ChessGame ref={gameControllerRef} flip={flip} onPlay={onNewMove} />
         {/* Notation of moves */}
