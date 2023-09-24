@@ -25,11 +25,12 @@ export type Point = { x: number; y: number };
 
 // movement
 export type DragPayload = { point: Point; sqr: Required<BoardSquare> };
-export type PieceMoves = { index: number; moves: Move[] };
+export type PieceMoves = Required<BoardSquare> & { moves: Move[] };
 export type Move = {
   from: number;
   to: number;
   type: MoveType;
+  notation: string;
 };
 export type MoveType = "normal" | "castle" | "enpassant" | "promotion";
 export type PieceMove = {
@@ -57,3 +58,5 @@ export interface GameControl {
   goToMove: (moveNumber: number) => void;
   reset: () => void;
 }
+
+export type BoardStyle = "brown" | "green";

@@ -45,7 +45,12 @@ export function findKnightMoves(board: GameBoard, sqr: BoardSquare): Move[] {
     if (!isValidIndex(move)) continue;
     const moveSqr = getSquare(board, move);
     if (!moveSqr || moveSqr.color !== sqr.color) {
-      moves.push({ to: move, from: sqr.index, type: "normal" });
+      const notation =
+        "N" +
+        (moveSqr?.id ? "x" : "") +
+        letters[move % 10] +
+        numbers[Math.floor(move / 10)];
+      moves.push({ to: move, from: sqr.index, type: "normal", notation });
     }
   }
 
@@ -65,7 +70,12 @@ export function findKingMoves(
     if (!isValidIndex(move)) continue;
     const moveSqr = getSquare(board, move);
     if (!moveSqr || moveSqr.color !== sqr.color) {
-      moves.push({ to: move, from: sqr.index, type: "normal" });
+      const notation =
+        "K" +
+        (moveSqr?.id ? "x" : "") +
+        letters[move % 10] +
+        numbers[Math.floor(move / 10)];
+      moves.push({ to: move, from: sqr.index, type: "normal", notation });
     }
   }
 
@@ -82,7 +92,7 @@ export function findKingMoves(
       srook?.piece === "r" &&
       srook?.color
     ) {
-      moves.push({ to: 76, from: 74, type: "castle" });
+      moves.push({ to: 76, from: 74, type: "castle", notation: "O-O" });
     }
     if (
       cr.includes("Q") &&
@@ -92,7 +102,7 @@ export function findKingMoves(
       lrook?.piece === "r" &&
       lrook?.color
     ) {
-      moves.push({ to: 72, from: 74, type: "castle" });
+      moves.push({ to: 72, from: 74, type: "castle", notation: "O-O-O" });
     }
   } else if (sqr.color === false && sqr.index === 4) {
     const srook = getSquare(board, 7);
@@ -104,7 +114,7 @@ export function findKingMoves(
       srook?.piece === "r" &&
       srook?.color === false
     ) {
-      moves.push({ to: 6, from: 4, type: "castle" });
+      moves.push({ to: 6, from: 4, type: "castle", notation: "O-O" });
     }
     if (
       cr.includes("q") &&
@@ -114,7 +124,7 @@ export function findKingMoves(
       lrook?.piece === "r" &&
       lrook?.color === false
     ) {
-      moves.push({ to: 2, from: 4, type: "castle" });
+      moves.push({ to: 2, from: 4, type: "castle", notation: "O-O-O" });
     }
   }
 
@@ -130,13 +140,14 @@ export function findRookMoves(board: GameBoard, sqr: BoardSquare): Move[] {
     while (isValidIndex(j)) {
       const moveSqr = getSquare(board, j);
       if (!moveSqr || moveSqr.color === sqr.color) break;
-      else if (moveSqr.color !== undefined && moveSqr.color !== sqr.color) {
-        moves.push({ to: j, from: sqr.index, type: "normal" });
-        break;
-      } else {
-        moves.push({ to: j, from: sqr.index, type: "normal" });
-        j = j + increments[i];
-      }
+      const notation =
+        "R" +
+        (moveSqr?.id ? "x" : "") +
+        letters[j % 10] +
+        numbers[Math.floor(j / 10)];
+      moves.push({ to: j, from: sqr.index, type: "normal", notation });
+      if (moveSqr.color !== undefined && moveSqr.color !== sqr.color) break;
+      else j = j + increments[i];
     }
   }
 
@@ -152,13 +163,14 @@ export function findBishopMoves(board: GameBoard, sqr: BoardSquare): Move[] {
     while (isValidIndex(j)) {
       const moveSqr = board[Math.floor(j / 10)][j % 10];
       if (!moveSqr || moveSqr.color === sqr.color) break;
-      else if (moveSqr.color !== undefined && moveSqr.color !== sqr.color) {
-        moves.push({ to: j, from: sqr.index, type: "normal" });
-        break;
-      } else {
-        moves.push({ to: j, from: sqr.index, type: "normal" });
-        j = j + increments[i];
-      }
+      const notation =
+        "B" +
+        (moveSqr?.id ? "x" : "") +
+        letters[j % 10] +
+        numbers[Math.floor(j / 10)];
+      moves.push({ to: j, from: sqr.index, type: "normal", notation });
+      if (moveSqr.color !== undefined && moveSqr.color !== sqr.color) break;
+      else j = j + increments[i];
     }
   }
 
@@ -167,7 +179,9 @@ export function findBishopMoves(board: GameBoard, sqr: BoardSquare): Move[] {
 
 /* Rook moves and bishop moves combined */
 export function findQueenMoves(board: GameBoard, sqr: BoardSquare): Move[] {
-  return [...findRookMoves(board, sqr), ...findBishopMoves(board, sqr)];
+  const moves = [...findRookMoves(board, sqr), ...findBishopMoves(board, sqr)];
+  moves.forEach((move) => (move.notation = "Q" + move.notation.slice(1)));
+  return moves;
 }
 
 export function findPawnMoves(
@@ -184,7 +198,14 @@ export function findPawnMoves(
   /* Advances */
   const frontSqr = board[row - colorValue][sqr.index % 10];
   if (!frontSqr?.piece) {
-    moves.push({ to: frontSqr.index, from: sqr.index, type: "normal" });
+    const notation =
+      letters[frontSqr.index % 10] + numbers[Math.floor(frontSqr.index / 10)];
+    moves.push({
+      to: frontSqr.index,
+      from: sqr.index,
+      type: "normal",
+      notation,
+    });
     let secondSqrIdx: number | null = null;
     if (sqr.color && row === 6) {
       secondSqrIdx = 4;
@@ -194,10 +215,14 @@ export function findPawnMoves(
     if (secondSqrIdx) {
       const secondFrontSqr = board[secondSqrIdx][sqr.index % 10];
       if (!secondFrontSqr.piece) {
+        const notation2 =
+          letters[secondFrontSqr.index % 10] +
+          numbers[Math.floor(secondFrontSqr.index / 10)];
         moves.push({
           to: secondFrontSqr.index,
           from: sqr.index,
           type: "normal",
+          notation: notation2,
         });
       }
     }
@@ -211,10 +236,16 @@ export function findPawnMoves(
       possibleCapture.color !== undefined &&
       possibleCapture.color !== sqr.color
     ) {
+      const notation =
+        letters[sqr.index % 10] +
+        "x" +
+        letters[possibleCapture.index % 10] +
+        numbers[Math.floor(possibleCapture.index / 10)];
       moves.push({
         to: possibleCapture.index,
         from: sqr.index,
         type: "normal",
+        notation,
       });
     }
   }
@@ -244,10 +275,16 @@ export function findPawnMoves(
       possibleCapture.index === targetIdx &&
       targetSqr.color !== sqr.color
     ) {
+      const notation =
+        letters[sqr.index % 10] +
+        "x" +
+        letters[possibleCapture.index % 10] +
+        numbers[Math.floor(possibleCapture.index / 10)];
       moves.push({
         to: possibleCapture.index,
         from: sqr.index,
         type: "enpassant",
+        notation,
       });
     }
   }
@@ -444,9 +481,41 @@ export function findAllMoves(lastMove: GameMove) {
     for (const sqr of row) {
       if (sqr.color === turn) {
         allMoves.push({
-          index: sqr.index,
+          ...(sqr as Required<BoardSquare>),
           moves: findMoves(board, sqr.index, lastMove),
         });
+      }
+    }
+  }
+
+  // find same pieces that have same moves
+  for (let i = 0; i < allMoves.length; i++) {
+    const fromSquare = getSquare(board, allMoves[i].index);
+    if (!fromSquare || !["n", "r"].includes(fromSquare?.piece ?? "")) continue;
+    if (!fromSquare.id) continue;
+
+    for (let j = 0; j < allMoves[i].moves.length; j++) {
+      const move = allMoves[i].moves[j];
+      if (move.type !== "normal") break;
+      const other = allMoves.find(
+        (sqr) =>
+          sqr.index !== fromSquare.index &&
+          sqr.id[0] === fromSquare.id![0] &&
+          sqr.moves.find((m) => m.to === move.to)
+      );
+      if (!other) continue;
+      if (other.index % 10 !== fromSquare.index % 10) {
+        move.notation =
+          move.notation[0] +
+          letters[fromSquare.index % 10] +
+          move.notation.slice(1);
+      } else if (
+        Math.floor(other.index / 10) !== Math.floor(fromSquare.index / 10)
+      ) {
+        move.notation =
+          move.notation[0] +
+          numbers[Math.floor(fromSquare.index / 10)] +
+          move.notation.slice(1);
       }
     }
   }

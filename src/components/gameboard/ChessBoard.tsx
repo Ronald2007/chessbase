@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, GestureResponderEvent } from "react-native";
-import BoardSVG from "@/assets/boards/brown.svg";
 import {
   BoardSquare,
   GameMove,
@@ -11,6 +10,7 @@ import {
   Promotion,
   Animation,
   GameBoard,
+  BoardStyle,
 } from "@/types";
 import Piece from "./Piece";
 import {
@@ -28,11 +28,13 @@ import GhostPiece from "./Ghost";
 import SelectPromotion from "./SelectPromotion";
 import { ANIMATION_DURATION } from "./lib/settings";
 import FadeIn from "./FadeIn";
+import Board from "./lib/Board";
 
 interface Props {
   flip: boolean;
   position: GameMove;
   playable: boolean;
+  boardStyle: BoardStyle;
   addMove: (newMove: GameMove) => void;
 }
 
@@ -40,6 +42,7 @@ export default function ChessBoard({
   flip,
   position,
   playable,
+  boardStyle,
   addMove,
 }: Props): JSX.Element {
   const layoutRef = useRef<Layout>({ x: 0, y: 0, w: 0, h: 0 });
@@ -96,12 +99,6 @@ export default function ChessBoard({
       updateBoard();
     }, ANIMATION_DURATION);
   }, [position]);
-
-  // useEffect(() => {
-  //   if (selected && animationTimeoutRef.current) {
-  //     updateBoard();
-  //   }
-  // }, [selected, animationTimeoutRef.current]);
 
   // only run when empty square are touched
   function handleTouch(e: GestureResponderEvent) {
@@ -216,6 +213,9 @@ export default function ChessBoard({
     promotion.newMove.board[Math.floor(promotion.move.to / 10)][
       promotion.move.to % 10
     ].piece = piece;
+    if (promotion.newMove.prevMove) {
+      promotion.newMove.prevMove.notation += "=" + piece.toUpperCase();
+    }
 
     addMove({ ...promotion.newMove });
     setPromotion(undefined);
@@ -229,18 +229,18 @@ export default function ChessBoard({
 
   return (
     <View
-      className={`w-full aspect-square relative flex flex-wrap flex-row bg-red-500 ${
+      className={`w-full aspect-square relative flex flex-wrap flex-row shadow-md shadow-black bg-white ${
         flip ? "rotate-180" : ""
       }`}
       onLayout={(e) => {
         const { x, y, height: h, width: w } = e.nativeEvent.layout;
-        layoutRef.current = { x, y, h, w };
+        layoutRef.current = { x, y, h: h, w: w };
         setBoard([...board]);
       }}
       onStartShouldSetResponderCapture={() => !playable}
       onStartShouldSetResponder={handleTouch}
     >
-      <BoardSVG className="absolute -z-10" />
+      <Board name={boardStyle} className="absolute -z-10" />
 
       {/* previous move */}
       {position.prevMove && (

@@ -4,7 +4,7 @@
 	<title>Chess board with green squares</title>
 	<defs>
 		<rect width="1" height="1" id="w" fill="#fff" stroke="none" />
-		<rect width="1" height="1" id="b" fill="#bf804a" stroke="none" />
+		<rect width="1" height="1" id="b" fill="#49a248" stroke="none" />
 		<pattern id="p" width="2" height="2" patternUnits="userSpaceOnUse" >
 			<use xlink:href="#w" />
 			<use xlink:href="#w" x="1" y="1" />

@@ -1,4 +1,4 @@
-import { GameControl, GameMove } from "@/types";
+import { BoardStyle, GameControl, GameMove } from "@/types";
 import { useState, forwardRef, useImperativeHandle } from "react";
 import { View, Text } from "react-native";
 import { initialFEN } from "./lib/settings";
@@ -10,15 +10,22 @@ interface GameProps {
   startFEN?: string;
   flip?: boolean;
   playable?: boolean;
+  boardStyle?: BoardStyle;
   onPlay?: (moves: GameMove[], newMove: GameMove) => void;
 }
 
 export default forwardRef<GameControl, GameProps>(function ChessGame(
-  { startFEN, flip = false, playable = true, onPlay },
+  {
+    startFEN = initialFEN,
+    flip = false,
+    playable = true,
+    boardStyle = "green",
+    onPlay,
+  },
   controlRef
 ) {
   const startPosition =
-    convertFENtoGame(startFEN ?? initialFEN) ?? convertFENtoGame(initialFEN)!;
+    convertFENtoGame(startFEN) ?? convertFENtoGame(initialFEN)!;
   const [moves, setMoves] = useState<GameMove[]>([startPosition]);
   const [moveNumber, setMoveNumber] = useState(0);
 
@@ -59,6 +66,7 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
       flip={flip}
       position={moves[moveNumber]}
       playable={playable}
+      boardStyle={boardStyle}
       addMove={addMove}
     />
   );
