@@ -1,67 +1,59 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 import ChessGame from "@/components/gameboard/ChessGame";
 import { useRef, useState } from "react";
-import // promoteFEN,
-// promoteFEN1,
-// testFEN1,
-// testFEN3,
-"@/components/gameboard/lib/settings";
-import { GameControl, GameMove } from "@/types";
+import { GameControl, GameMove, Notation } from "@/types";
 import { baseController } from "@/lib/utils";
+import MoveNotation from "@/components/Notation";
+import GameControls from "@/components/GameControls";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);
+  const [notations, setNotations] = useState<Notation[]>([]);
   const gameControllerRef = useRef<GameControl>(baseController);
-  const [notation, setNotation] = useState<string[]>([]);
 
-  function onNewMove(prevMoves: GameMove[], newMove: GameMove) {
+  function onNewMove(moves: GameMove[]) {
+    const newMove = moves[moves.length - 1];
     if (!newMove.prevMove) return;
 
-    setNotation([...notation, newMove.prevMove.notation]);
+    setNotations([
+      ...notations,
+      {
+        notation: newMove.prevMove.notation,
+        positionNumber: moves.length - 1,
+        moveNumber: newMove.fm,
+        color: !newMove.turn,
+      },
+    ]);
   }
 
   return (
-    <View className="flex items-center p-2 space-y-10">
-      <View className="flex items-center">
-        <ChessGame
-          ref={gameControllerRef}
-          // startFEN={promoteFEN1}
-          flip={flip}
-          onPlay={onNewMove}
+    <View className="h-full w-full flex-col">
+      <View className="flex flex-grow items-center px-1 py-5 space-y-4">
+        {/* Chess Game */}
+        <ChessGame ref={gameControllerRef} flip={flip} onPlay={onNewMove} />
+        {/* Notation of moves */}
+        <View className="flex-row w-full flex-wrap">
+          {notations.map((note, idx) => (
+            <MoveNotation
+              key={idx}
+              note={note}
+              first={idx === 0}
+              onTap={gameControllerRef.current.goToMove}
+            />
+          ))}
+        </View>
+      </View>
+      {/* Game Navigation */}
+      <View className="w-full">
+        <GameControls
+          back={() => gameControllerRef.current.back()}
+          forward={() => gameControllerRef.current.forward()}
+          reset={() => {
+            gameControllerRef.current.reset();
+            setNotations([]);
+          }}
+          flip={() => setFlip(!flip)}
         />
-      </View>
-      <Text>{notation}</Text>
-      <View className="flex-row w-full justify-around">
-        <TouchableOpacity
-          className="py-2 px-5 bg-gray-200"
-          onPress={() => setFlip(!flip)}
-        >
-          <Text>Flip</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="py-2 px-5 bg-gray-200"
-          onPress={() => gameControllerRef.current.reset()}
-        >
-          <Text>Reset</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Arrows */}
-      <View className="flex-row w-full justify-around">
-        {/* Back arrow */}
-        <TouchableOpacity
-          className="py-2 px-5 bg-gray-200"
-          onPress={() => gameControllerRef.current.back()}
-        >
-          <Text>Back</Text>
-        </TouchableOpacity>
-        {/* Forward */}
-        <TouchableOpacity
-          className="py-2 px-5 bg-gray-200"
-          onPress={() => gameControllerRef.current.forward()}
-        >
-          <Text>Forward</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

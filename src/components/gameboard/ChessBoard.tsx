@@ -190,6 +190,7 @@ export default function ChessBoard({
       fm: !position.turn ? position.fm + 1 : position.fm,
       fen: convertGameToFEN(position),
       prevMove: move,
+      variations: [],
     };
 
     if (type === "drag") {

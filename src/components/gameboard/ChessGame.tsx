@@ -11,7 +11,7 @@ interface GameProps {
   flip?: boolean;
   playable?: boolean;
   boardStyle?: BoardStyle;
-  onPlay?: (moves: GameMove[], newMove: GameMove) => void;
+  onPlay?: (moves: GameMove[]) => void;
 }
 
 export default forwardRef<GameControl, GameProps>(function ChessGame(
@@ -26,7 +26,9 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
 ) {
   const startPosition =
     convertFENtoGame(startFEN) ?? convertFENtoGame(initialFEN)!;
-  const [moves, setMoves] = useState<GameMove[]>([startPosition]);
+  const [moves, setMoves] = useState<GameMove[]>([
+    { ...startPosition, variations: [] },
+  ]);
   const [moveNumber, setMoveNumber] = useState(0);
 
   useImperativeHandle(
@@ -34,9 +36,10 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
     () => ({
       back: () => setMoveNumber((v) => moveNumberClamp(v - 1)),
       forward: () => setMoveNumber((v) => moveNumberClamp(v + 1)),
-      goToMove: (num) => setMoveNumber(() => moveNumberClamp(num)),
-      reset: () => {
-        setMoves([convertFENtoGame(initialFEN)!]);
+      goToMove: (num) => setMoveNumber(moveNumberClamp(num)),
+      reset: (fen: string = initialFEN) => {
+        const resetPos = convertFENtoGame(fen) ?? convertFENtoGame(initialFEN)!;
+        setMoves([{ ...resetPos, variations: [] }]);
         setMoveNumber(0);
       },
     }),
@@ -48,9 +51,10 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
   }
 
   function addMove(newMove: GameMove) {
-    onPlay?.(moves, newMove);
-    setMoves([...moves, newMove]);
-    setMoveNumber(moves.length);
+    const newMoves = [...moves, newMove];
+    onPlay?.(newMoves);
+    setMoves([...newMoves]);
+    setMoveNumber(newMoves.length - 1);
   }
 
   if (!moves[moveNumber] || !moves[moveNumber].board) {
