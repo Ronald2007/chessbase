@@ -1,48 +1,45 @@
 import { View } from "react-native";
 import ChessGame from "@/components/gameboard/ChessGame";
 import { useRef, useState } from "react";
-import { GameControl, GameMove, Notation } from "@/types";
+import { GameControl, GameMove } from "@/types";
 import { baseController } from "@/lib/utils";
-import MoveNotation from "@/components/Notation";
 import GameControls from "@/components/GameControls";
 import Header from "@/components/Header";
+import NotationView from "@/components/NotationView";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);
-  const [notations, setNotations] = useState<Notation[]>([]);
+  const [moves, setMoves] = useState<GameMove[]>([]);
+  const [currMove, setCurrMove] = useState<number[]>([0]);
   const gameControllerRef = useRef<GameControl>(baseController);
 
-  function onNewMove(moves: GameMove[]) {
-    const newMove = moves[moves.length - 1];
-    if (!newMove.prevMove) return;
+  function onNewMove(newMoves: GameMove[]) {
+    setMoves([...newMoves]);
+  }
 
-    setNotations([
-      ...notations,
-      {
-        notation: newMove.prevMove.notation,
-        positionNumber: moves.length - 1,
-        moveNumber: newMove.fm,
-        color: !newMove.turn,
-      },
-    ]);
+  function onMoveChange(moveNumber: number[]) {
+    setCurrMove(moveNumber);
   }
 
   return (
     <View className="h-full w-full flex-col">
       <Header />
-      <View className="flex flex-grow items-center px-1 py-2 space-y-4">
+      <View className="flex flex-grow px-1 py-2">
         {/* Chess Game */}
-        <ChessGame ref={gameControllerRef} flip={flip} onPlay={onNewMove} />
+        <ChessGame
+          ref={gameControllerRef}
+          flip={flip}
+          onPlay={onNewMove}
+          onMoveChange={onMoveChange}
+        />
         {/* Notation of moves */}
-        <View className="flex-row w-full flex-wrap">
-          {notations.map((note, idx) => (
-            <MoveNotation
-              key={idx}
-              note={note}
-              first={idx === 0}
-              onTap={gameControllerRef.current.goToMove}
-            />
-          ))}
+        <View className="w-full mt-2">
+          <NotationView
+            moves={moves}
+            level={0}
+            currMove={currMove}
+            onTap={(nums) => gameControllerRef.current.goToMove(nums)}
+          />
         </View>
       </View>
       {/* Game Navigation */}
@@ -52,7 +49,7 @@ export default function HomePage() {
           forward={() => gameControllerRef.current.forward()}
           reset={() => {
             gameControllerRef.current.reset();
-            setNotations([]);
+            setMoves([]);
           }}
           flip={() => setFlip(!flip)}
         />

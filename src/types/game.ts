@@ -13,13 +13,17 @@ export interface GamePosition {
   target: string | null;
   hm: number;
   fm: number;
+  prevMove?: Move;
 }
-export type GameMove = GamePosition & { prevMove?: Move, variations: GameMove[][] };
+export type GameMove = GamePosition & {
+  variations: GameMove[][];
+  positionNumber: number[];
+};
 export type NewBoardProps = Pick<GamePosition, "board" | "cr" | "target">;
 export type Layout = { x: number; y: number; w: number; h: number };
 export type Promotion = {
   move: Move;
-  newMove: GameMove;
+  newMove: GamePosition;
 };
 export type Point = { x: number; y: number };
 
@@ -55,13 +59,14 @@ export type FENarray = [string, string, string, string, string, string];
 export interface GameControl {
   back: () => void;
   forward: () => void;
-  goToMove: (moveNumber: number) => void;
+  goToMove: (moveNumber: number[]) => void;
   reset: () => void;
 }
 export type BoardStyle = "brown" | "green";
 export interface Notation {
-  positionNumber: number;
+  positionNumber: number[];
   notation: string;
   moveNumber: number;
   color: boolean;
+  variations: Notation[][];
 }

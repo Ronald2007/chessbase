@@ -1,7 +1,7 @@
 import {
   BoardSquare,
   GameBoard,
-  GameMove,
+  GamePosition,
   Layout,
   Move,
   NewBoardProps,
@@ -28,7 +28,7 @@ export function getSquare(board: GameBoard, index: number) {
 export function makeMove(
   actualBoard: GameBoard,
   move: Move,
-  lastMove: GameMove
+  lastMove: GamePosition
 ): NewBoardProps {
   const board: GameBoard = JSON.parse(JSON.stringify(actualBoard));
   if (move.from === move.to) return { board, cr: null, target: null };

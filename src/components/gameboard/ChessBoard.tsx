@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, GestureResponderEvent } from "react-native";
 import {
   BoardSquare,
-  GameMove,
   Layout,
   Point,
   DragPayload,
@@ -11,6 +10,7 @@ import {
   Animation,
   GameBoard,
   BoardStyle,
+  GamePosition,
 } from "@/types";
 import Piece from "./Piece";
 import {
@@ -32,10 +32,10 @@ import Board from "./lib/Board";
 
 interface Props {
   flip: boolean;
-  position: GameMove;
+  position: GamePosition;
   playable: boolean;
   boardStyle: BoardStyle;
-  addMove: (newMove: GameMove) => void;
+  addMove: (newMove: GamePosition) => void;
 }
 
 export default function ChessBoard({
@@ -68,6 +68,7 @@ export default function ChessBoard({
   useEffect(() => {
     // find all new moves
     setAllMoves(findAllMoves(position));
+    setSelected(undefined);
     // updates board skipping all animations, ie. drag
     if (skipAnimationsRef.current) return updateBoard();
 
@@ -181,17 +182,17 @@ export default function ChessBoard({
 
     const changed = makeMove(position.board, move, position);
     // setBoard(changed.board);
-    const newMove: GameMove = {
+    const newMove: GamePosition = {
       board: changed.board,
       turn: !position.turn,
       cr: changed.cr,
       target: changed.target,
       hm: fromSquare.piece === "p" ? 0 : position.hm,
       fm: !position.turn ? position.fm + 1 : position.fm,
-      fen: convertGameToFEN(position),
+      fen: "",
       prevMove: move,
-      variations: [],
     };
+    newMove.fen = convertGameToFEN(newMove);
 
     if (type === "drag") {
       skipAnimationsRef.current = true;
@@ -261,33 +262,41 @@ export default function ChessBoard({
       )}
 
       {/* possible moves */}
-      {selected &&
-        allMoves
-          .find((move) => move.index === selected.sqr.index)
-          ?.moves.map((move) => {
-            const point = convertIndexToPoint(move.to, layoutRef.current);
-            return (
-              <HighlightSquare
-                key={move.to}
-                point={point}
-                type="possible"
-                isCapture={!!getSquare(board, move.to)?.piece}
-              />
-            );
-          })}
+      {useMemo(
+        () =>
+          selected &&
+          allMoves
+            .find((move) => move.index === selected.sqr.index)
+            ?.moves.map((move) => {
+              const point = convertIndexToPoint(move.to, layoutRef.current);
+              return (
+                <HighlightSquare
+                  key={move.to}
+                  point={point}
+                  type="possible"
+                  isCapture={!!getSquare(board, move.to)?.piece}
+                />
+              );
+            }),
+        [selected?.sqr.index]
+      )}
 
       {/* Hover over */}
-      {selected &&
-        over &&
-        isValidIndex(convertPointToIndex(over, layoutRef.current)) && (
-          <HighlightSquare
-            point={convertIndexToPoint(
-              convertPointToIndex(over, layoutRef.current),
-              layoutRef.current
-            )}
-            type="over"
-          />
-        )}
+      {useMemo(
+        () =>
+          selected &&
+          over &&
+          isValidIndex(convertPointToIndex(over, layoutRef.current)) && (
+            <HighlightSquare
+              point={convertIndexToPoint(
+                convertPointToIndex(over, layoutRef.current),
+                layoutRef.current
+              )}
+              type="over"
+            />
+          ),
+        [selected?.sqr.index, over?.x, over?.y]
+      )}
 
       {/* show faded piece at start square */}
       {selected && (

@@ -1,11 +1,17 @@
-import { BoardSquare, GameBoard, GameMove, Move, PieceMoves } from "@/types";
+import {
+  BoardSquare,
+  GameBoard,
+  GamePosition,
+  Move,
+  PieceMoves,
+} from "@/types";
 import { getSquare, isValidIndex, makeMove } from "./utils";
 import { letters, numbers } from "./settings";
 
 export function findMoves(
   board: GameBoard,
   index: number,
-  lastMove: GameMove
+  lastMove: GamePosition
 ): Move[] {
   const sqr = isValidIndex(index) && getSquare(board, index);
   if (!sqr) return [];
@@ -295,7 +301,7 @@ export function findPawnMoves(
 export function isKingInCheck(
   board: GameBoard,
   move: Move,
-  lastMove: GameMove,
+  lastMove: GamePosition,
   kingSqr?: BoardSquare
 ): boolean {
   const sqr = getSquare(board, move.from);
@@ -391,7 +397,7 @@ export function isKingInCheck(
 export function checkForChecks(
   board: GameBoard,
   moves: Move[],
-  lastMove: GameMove
+  lastMove: GamePosition
 ) {
   if (moves.length === 0) return [];
   const sqr = getSquare(board, moves[0].from);
@@ -473,7 +479,7 @@ export function checkForChecks(
 }
 
 /* Find moves for all playable pieces */
-export function findAllMoves(lastMove: GameMove) {
+export function findAllMoves(lastMove: GamePosition) {
   const board = lastMove.board;
   const turn = lastMove.turn;
   const allMoves: PieceMoves[] = [];
