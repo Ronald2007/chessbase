@@ -3,6 +3,7 @@
 # me
 bugs.txt
 z.txt
+.vscode/
 
 # dependencies
 node_modules/

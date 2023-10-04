@@ -39,6 +39,7 @@ export default function HomePage() {
             level={0}
             currMove={currMove}
             onTap={(nums) => gameControllerRef.current.goToMove(nums)}
+            figurines={true}
           />
         </View>
       </View>

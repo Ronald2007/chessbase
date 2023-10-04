@@ -1,12 +1,14 @@
 import { GameMove } from "@/types";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Fragment } from "react";
+import { PieceSVG } from "./gameboard/lib/pieces";
 
 interface Props {
   moves: GameMove[];
   level: number;
   currMove: number[];
   onTap: (nums: number[]) => void;
+  figurines?: boolean;
 }
 
 export default function NotationView({
@@ -14,6 +16,7 @@ export default function NotationView({
   level,
   currMove,
   onTap,
+  figurines = true,
 }: Props): JSX.Element {
   return (
     <>
@@ -30,9 +33,9 @@ export default function NotationView({
                 <Notation
                   move={move}
                   first={idx === 0}
-                  level={level}
                   currMove={currMove}
                   onTap={onTap}
+                  figurines={figurines}
                 />
               </View>
               {move.variations.length > 0 &&
@@ -43,6 +46,7 @@ export default function NotationView({
                     level={level + 1}
                     currMove={currMove}
                     onTap={onTap}
+                    figurines={figurines}
                   />
                 ))}
             </Fragment>
@@ -57,28 +61,68 @@ export default function NotationView({
 interface NotationProps {
   move: GameMove;
   first: boolean;
-  level: number;
   currMove: number[];
   onTap: (nums: number[]) => void;
+  figurines?: boolean;
 }
 
-function Notation({ move, first, currMove, onTap }: NotationProps) {
+function Notation({
+  move,
+  first,
+  currMove,
+  onTap,
+  figurines = true,
+}: NotationProps) {
   if (!move.prevMove) return <></>;
-  const notation =
-    // (first ? "      ".repeat(level) : " ") +
-    (!move.turn ? move.fm + "." : first ? move.fm + "..." : "") +
-    move.prevMove.notation;
+  const numbering = !move.turn ? move.fm + "." : first ? move.fm + "..." : "";
+  const notation = move.prevMove.notation;
   const selected =
     currMove.length === move.positionNumber.length &&
     currMove.filter((m, idx) => m === move.positionNumber[idx]).length ===
       currMove.length;
+  // displayNotation =
+  let figurineNotation =
+    figurines &&
+    move.prevMove.type === "normal" &&
+    notation[0] === notation[0].toUpperCase()
+      ? notation.slice(1)
+      : notation;
+  if (move.prevMove.type === "promotion") {
+    figurineNotation = figurineNotation.slice(0, -1);
+  }
 
   return (
-    <Text
-      className={`text-base px-1 rounded-md ${selected ? "bg-gray-200" : ""}`}
+    <Pressable
+      className={`px-1 rounded-md flex flex-row items-center ${
+        selected ? "bg-gray-200" : ""
+      }`}
       onPress={() => onTap(move.positionNumber)}
     >
-      {notation}
-    </Text>
+      {figurines ? (
+        <>
+          <Text className="text-base">{numbering}</Text>
+          <PieceSVG
+            piece={move.prevMove.notation[0].toLowerCase()}
+            color={!move.turn}
+            height={16}
+            width={16}
+          />
+          <Text className="text-base">{figurineNotation}</Text>
+          {move.prevMove.type === "promotion" && (
+            <PieceSVG
+              piece={notation.at(-1)!.toLowerCase()}
+              color={!move.turn}
+              height={16}
+              width={16}
+            />
+          )}
+        </>
+      ) : (
+        <Text className="text-base">
+          {numbering}
+          {notation}
+        </Text>
+      )}
+    </Pressable>
   );
 }

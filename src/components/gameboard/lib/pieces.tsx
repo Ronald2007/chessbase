@@ -23,7 +23,7 @@ type Props = Omit<SvgProps, "color"> & {
   color: boolean;
 };
 
-export function PieceSVG({ piece, color, ...props }: Props) {
+export function PieceSVG({ piece, color, width, height, ...props }: Props) {
   const pieceIdx = pieces.findIndex((p) => p === piece);
   if (pieceIdx < 0) {
     return <></>;
@@ -32,5 +32,5 @@ export function PieceSVG({ piece, color, ...props }: Props) {
   const SVGPieces = [WR, WN, WB, WQ, WK, WP, BR, BN, BB, BQ, BK, BP];
   const Piece = SVGPieces[pieceIdx + (color ? 0 : 6)];
 
-  return <Piece {...props} width="100%" height="100%" />;
+  return <Piece {...props} width={width ?? "100%"} height={height ?? "100%"} />;
 }
