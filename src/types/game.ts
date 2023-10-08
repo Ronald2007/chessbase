@@ -17,6 +17,7 @@ export interface GamePosition {
 }
 export type GameMove = GamePosition & {
   variations: GameMove[][];
+  comments: string[];
   positionNumber: number[];
 };
 export type NewBoardProps = Pick<GamePosition, "board" | "cr" | "target">;
@@ -61,6 +62,7 @@ export interface GameControl {
   forward: () => void;
   goToMove: (moveNumber: number[]) => void;
   reset: () => void;
+  setGame: (moves: GameMove[]) => void;
 }
 export type BoardStyle = "brown" | "green";
 export interface Notation {

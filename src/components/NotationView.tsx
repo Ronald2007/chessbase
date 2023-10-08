@@ -27,6 +27,7 @@ export default function NotationView({
       >
         {level > 0 && <Text className="text-base">{"["}</Text>}
         {moves.map((move, idx) => {
+          // console.log(move.positionNumber, move.prevMove?.notation);
           return (
             <Fragment key={idx}>
               <View key={idx} className="">
@@ -74,7 +75,11 @@ function Notation({
   figurines = true,
 }: NotationProps) {
   if (!move.prevMove) return <></>;
-  const numbering = !move.turn ? move.fm + "." : first ? move.fm + "..." : "";
+  const numbering = !move.turn
+    ? move.fm + "."
+    : first
+    ? move.fm - 1 + "..."
+    : "";
   const notation = move.prevMove.notation;
   const selected =
     currMove.length === move.positionNumber.length &&
@@ -96,17 +101,22 @@ function Notation({
       className={`px-1 rounded-md flex flex-row items-center ${
         selected ? "bg-gray-200" : ""
       }`}
-      onPress={() => onTap(move.positionNumber)}
+      onPress={() => {
+        console.log(currMove);
+        onTap(move.positionNumber);
+      }}
     >
       {figurines ? (
         <>
           <Text className="text-base">{numbering}</Text>
-          <PieceSVG
-            piece={move.prevMove.notation[0].toLowerCase()}
-            color={!move.turn}
-            height={16}
-            width={16}
-          />
+          {notation[0] === notation[0].toUpperCase() && (
+            <PieceSVG
+              piece={move.prevMove.notation[0].toLowerCase()}
+              color={!move.turn}
+              height={16}
+              width={16}
+            />
+          )}
           <Text className="text-base">{figurineNotation}</Text>
           {move.prevMove.type === "promotion" && (
             <PieceSVG
@@ -122,6 +132,9 @@ function Notation({
           {numbering}
           {notation}
         </Text>
+      )}
+      {move.comments.length > 0 && (
+        <Text className="text-md ml-1">{move.comments.join("")}</Text>
       )}
     </Pressable>
   );

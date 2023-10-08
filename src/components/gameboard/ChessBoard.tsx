@@ -242,7 +242,12 @@ export default function ChessBoard({
       onStartShouldSetResponderCapture={() => !playable}
       onStartShouldSetResponder={handleTouch}
     >
-      <Board name={boardStyle} className="absolute -z-10" />
+      {useMemo(
+        () => (
+          <Board name={boardStyle} className="absolute -z-10" />
+        ),
+        [boardStyle]
+      )}
 
       {/* previous move */}
       {position.prevMove && (
@@ -299,8 +304,16 @@ export default function ChessBoard({
       )}
 
       {/* show faded piece at start square */}
-      {selected && (
-        <GhostPiece square={selected.sqr} point={selected.point} flip={flip} />
+      {useMemo(
+        () =>
+          selected && (
+            <GhostPiece
+              square={selected.sqr}
+              point={selected.point}
+              flip={flip}
+            />
+          ),
+        [selected, flip]
       )}
 
       {/* promotion */}

@@ -1,10 +1,10 @@
 import { BoardStyle, GameControl, GameMove, GamePosition } from "@/types";
 import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
 import { View, Text } from "react-native";
-import { initialFEN } from "./lib/settings";
-import { convertFENtoGame } from "./lib/fen";
-import ChessBoard from "./ChessBoard";
-import { numberClamp } from "./lib/utils";
+import { initialFEN } from "./gameboard/lib/settings";
+import { convertFENtoGame } from "./gameboard/lib/fen";
+import ChessBoard from "./gameboard/ChessBoard";
+import { numberClamp } from "./gameboard/lib/utils";
 import { addNewMove, findPosition, getVariation } from "@/lib/utils";
 
 interface GameProps {
@@ -30,7 +30,7 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
   const startPosition =
     convertFENtoGame(startFEN) ?? convertFENtoGame(initialFEN)!;
   const [moves, setMoves] = useState<GameMove[]>([
-    { ...startPosition, variations: [], positionNumber: [0] },
+    { ...startPosition, variations: [], comments: [], positionNumber: [0] },
   ]);
   const [moveNumber, setMoveNumber] = useState([0]);
   const [position, setPosition] = useState<GameMove | undefined>(moves[0]);
@@ -39,7 +39,7 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
     onMoveChange?.(moveNumber);
     const pos = findPosition(moves, moveNumber);
     setPosition(pos);
-  }, [moveNumber]);
+  }, [moveNumber, moves]);
 
   useImperativeHandle(
     controlRef,
@@ -65,11 +65,17 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
       },
       reset: (fen: string = initialFEN) => {
         const resetPos = convertFENtoGame(fen) ?? convertFENtoGame(initialFEN)!;
-        setMoves([{ ...resetPos, variations: [], positionNumber: [0] }]);
+        setMoves([
+          { ...resetPos, variations: [], comments: [], positionNumber: [0] },
+        ]);
         setMoveNumber([0]);
       },
+      setGame: (newMoves: GameMove[]) => {
+        setMoves([...newMoves]);
+        setMoveNumber([newMoves.length - 1]);
+      },
     }),
-    [moveNumber, setMoveNumber]
+    [moveNumber, setMoveNumber, moves, setMoves]
   );
 
   function moveNumberClamp(num: number) {
@@ -81,6 +87,7 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
       ...newPosition,
       variations: [],
       positionNumber: moveNumber,
+      comments: [],
     };
     const { newMoves, newMoveNumber } = addNewMove(moves, newMove);
     onPlay?.(newMoves);

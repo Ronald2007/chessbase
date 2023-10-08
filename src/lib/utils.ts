@@ -5,6 +5,7 @@ export const baseController: GameControl = {
   forward: () => {},
   goToMove: () => {},
   reset: () => {},
+  setGame: () => {},
 };
 
 type Variations<V> = {

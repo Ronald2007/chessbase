@@ -177,3 +177,15 @@ export function numberClamp(num: number, max: number, min: number = 0) {
   else if (num > max) return max;
   else return num;
 }
+
+export function convertIndexToSquare(index: number) {
+  const letter = letters[index % 10];
+  const number = numbers[Math.floor(index) / 10];
+  return letter + number;
+}
+
+export function convertSquareToIndex(square: string) {
+  const row = numbers.indexOf(parseInt(square[1]));
+  const col = letters.indexOf(square[0]);
+  return row * 10 + col;
+}

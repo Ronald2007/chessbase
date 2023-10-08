@@ -3,7 +3,7 @@ import React from "react";
 import { View } from "react-native";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 
-interface Props extends Omit<GameControl, "goToMove"> {
+interface Props extends Pick<GameControl, "back" | "forward" | "reset"> {
   flip: () => void;
   size?: number;
 }

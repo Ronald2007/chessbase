@@ -1,5 +1,5 @@
 import { BoardSquare, Animation, Point } from "@/types";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder } from "react-native";
 import { PieceSVG } from "./lib/pieces";
 import { ANIMATION_DURATION } from "./lib/settings";
@@ -146,7 +146,12 @@ export default function Piece({
       }}
       {...panResponder.panHandlers}
     >
-      <PieceSVG piece={piece} color={color} />
+      {useMemo(
+        () => (
+          <PieceSVG piece={piece} color={color} />
+        ),
+        [piece, color]
+      )}
     </Animated.View>
   );
 }
