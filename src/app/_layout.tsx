@@ -6,6 +6,7 @@ import {
 } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import "expo-dev-client";
 
 export default function RootLayout() {
   useEffect(() => {

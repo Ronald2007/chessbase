@@ -1,7 +1,7 @@
 import { BoardSquare, Animation, Point } from "@/types";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder } from "react-native";
-import { PieceSVG } from "./lib/pieces";
+import PieceSVG from "./lib/PieceSVG";
 import { ANIMATION_DURATION } from "./lib/settings";
 
 interface Props {

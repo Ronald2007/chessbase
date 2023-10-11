@@ -1,7 +1,4 @@
-import {
-  convertFENtoGame,
-  convertGameToFEN,
-} from "@/components/gameboard/lib/fen";
+import { convertFENtoGame, convertGameToFEN } from "@/lib/fen";
 import { findAllMoves } from "@/components/gameboard/lib/moves";
 import { initialFEN } from "@/components/gameboard/lib/settings";
 import {
@@ -171,13 +168,11 @@ export function notationToMove(notation: string, last: GamePosition): Move {
   // if (samePieces.length > 1) console.log(samePieces);
 
   move.from = samePieces[0].moves[0].from;
-  // console.log("created: ", move);
   const samePiece = samePieces.find((sp) =>
     sp.moves.find((m) => m.notation === move.notation)
   );
   const foundMove = samePiece?.moves.find((m) => m.notation === move.notation);
 
-  // console.log("found: ", foundMove);
   return foundMove ?? move;
 }
 

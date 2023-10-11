@@ -6,7 +6,7 @@ import { baseController } from "@/lib/utils";
 import GameControls from "@/components/GameControls";
 import Header from "@/components/Header";
 import NotationView from "@/components/NotationView";
-import { pgnToGame } from "@/lib/pgn/pgn";
+import { pgnToGame } from "@/lib/pgn";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);

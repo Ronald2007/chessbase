@@ -5,6 +5,9 @@
 // const s = movetext.split(/\{.*\}/gms);
 // const moveList: string[] = s.join("").match(/[A-Za-z][a-zA-Z0-9=-]+/gm) ?? [];
 
+import { initialFEN } from "@/components/gameboard/lib/settings";
+import { convertFENtoGame } from "../fen";
+import { createEmptyMove } from "../utils";
 import { createGame, extractMovesFromPGN, extractTagsFromPGN } from "./helpers";
 
 export function pgnToGame(pgn: string) {
@@ -17,10 +20,12 @@ export function pgnToGame(pgn: string) {
 
   /* Get moves */
   const moveList = extractMovesFromPGN(movetext);
-  // console.log(moveList);
 
   /* Create game */
-  const game = createGame(moveList);
+  const game = createGame(
+    moveList,
+    createEmptyMove(convertFENtoGame(tags["FEN"] ?? initialFEN)!)
+  );
 
   return game;
 }

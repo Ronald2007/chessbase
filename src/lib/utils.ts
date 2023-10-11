@@ -1,4 +1,4 @@
-import { GameControl, GameMove } from "@/types";
+import { GameControl, GameMove, GamePosition } from "@/types";
 
 export const baseController: GameControl = {
   back: () => {},
@@ -79,4 +79,8 @@ export function findPosition<T extends Variations<T>>(
     i += 2;
   }
   return pos;
+}
+
+export function createEmptyMove(position: GamePosition): GameMove {
+  return { ...position, comments: [], variations: [], positionNumber: [0] };
 }

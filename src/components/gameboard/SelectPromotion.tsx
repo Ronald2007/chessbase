@@ -1,7 +1,7 @@
 import { Point } from "@/types";
 import React from "react";
 import { View, Pressable } from "react-native";
-import { PieceSVG } from "./lib/pieces";
+import PieceSVG from "./lib/PieceSVG";
 
 interface Props {
   point: Point;

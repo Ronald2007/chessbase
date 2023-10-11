@@ -21,7 +21,7 @@ import {
   isValidIndex,
   makeMove,
 } from "./lib/utils";
-import { convertGameToFEN } from "./lib/fen";
+import { convertGameToFEN } from "@/lib/fen";
 import { findAllMoves } from "./lib/moves";
 import HighlightSquare from "./HighlightSquare";
 import GhostPiece from "./Ghost";

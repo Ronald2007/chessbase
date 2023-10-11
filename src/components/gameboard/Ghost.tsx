@@ -2,7 +2,7 @@ import { BoardSquare, Point } from "@/types";
 import React from "react";
 import { View } from "react-native";
 import { isValidIndex } from "./lib/utils";
-import { PieceSVG } from "./lib/pieces";
+import PieceSVG from "./lib/PieceSVG";
 
 interface Props {
   square: Required<BoardSquare>;

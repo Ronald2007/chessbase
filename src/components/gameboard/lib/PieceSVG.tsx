@@ -23,7 +23,13 @@ type Props = Omit<SvgProps, "color"> & {
   color: boolean;
 };
 
-export function PieceSVG({ piece, color, width, height, ...props }: Props) {
+export default function PieceSVG({
+  piece,
+  color,
+  width,
+  height,
+  ...props
+}: Props) {
   const pieceIdx = pieces.findIndex((p) => p === piece);
   if (pieceIdx < 0) {
     return <></>;

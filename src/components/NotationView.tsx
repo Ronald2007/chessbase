@@ -1,7 +1,7 @@
 import { GameMove } from "@/types";
 import { View, Text, Pressable } from "react-native";
-import { Fragment } from "react";
-import { PieceSVG } from "./gameboard/lib/pieces";
+import { Fragment, useMemo } from "react";
+import PieceSVG from "./gameboard/lib/PieceSVG";
 
 interface Props {
   moves: GameMove[];
@@ -20,7 +20,6 @@ export default function NotationView({
 }: Props): JSX.Element {
   return (
     <>
-      <View className="w-full h-0"></View>
       <View
         className="flex flex-row flex-wrap justify-start w-full items-center"
         style={{ paddingLeft: level * 16 }}
@@ -28,16 +27,25 @@ export default function NotationView({
         {level > 0 && <Text className="text-base">{"["}</Text>}
         {moves.map((move, idx) => {
           // console.log(move.positionNumber, move.prevMove?.notation);
+          const selected =
+            currMove.length === move.positionNumber.length &&
+            currMove.filter((m, idx) => m === move.positionNumber[idx])
+              .length === currMove.length;
           return (
             <Fragment key={idx}>
               <View key={idx} className="">
-                <Notation
-                  move={move}
-                  first={idx === 0}
-                  currMove={currMove}
-                  onTap={onTap}
-                  figurines={figurines}
-                />
+                {useMemo(() => {
+                  return (
+                    <Notation
+                      move={move}
+                      first={idx === 0}
+                      // currMove={currMove}
+                      selected={selected}
+                      onTap={onTap}
+                      figurines={figurines}
+                    />
+                  );
+                }, [move.fen, idx, selected, figurines])}
               </View>
               {move.variations.length > 0 &&
                 move.variations.map((variation, idx) => (
@@ -62,7 +70,8 @@ export default function NotationView({
 interface NotationProps {
   move: GameMove;
   first: boolean;
-  currMove: number[];
+  // currMove: number[];
+  selected: boolean;
   onTap: (nums: number[]) => void;
   figurines?: boolean;
 }
@@ -70,10 +79,12 @@ interface NotationProps {
 function Notation({
   move,
   first,
-  currMove,
+  selected,
+  // currMove,
   onTap,
   figurines = true,
 }: NotationProps) {
+  console.log("notation rf");
   if (!move.prevMove) return <></>;
   const numbering = !move.turn
     ? move.fm + "."
@@ -81,10 +92,7 @@ function Notation({
     ? move.fm - 1 + "..."
     : "";
   const notation = move.prevMove.notation;
-  const selected =
-    currMove.length === move.positionNumber.length &&
-    currMove.filter((m, idx) => m === move.positionNumber[idx]).length ===
-      currMove.length;
+
   // displayNotation =
   let figurineNotation =
     figurines &&
@@ -102,7 +110,7 @@ function Notation({
         selected ? "bg-gray-200" : ""
       }`}
       onPress={() => {
-        console.log(currMove);
+        // console.log(currMove);
         onTap(move.positionNumber);
       }}
     >

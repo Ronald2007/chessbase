@@ -2,7 +2,7 @@ import { BoardStyle, GameControl, GameMove, GamePosition } from "@/types";
 import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
 import { View, Text } from "react-native";
 import { initialFEN } from "./gameboard/lib/settings";
-import { convertFENtoGame } from "./gameboard/lib/fen";
+import { convertFENtoGame } from "@/lib/fen";
 import ChessBoard from "./gameboard/ChessBoard";
 import { numberClamp } from "./gameboard/lib/utils";
 import { addNewMove, findPosition, getVariation } from "@/lib/utils";
