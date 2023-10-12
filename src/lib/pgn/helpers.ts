@@ -1,3 +1,6 @@
+// move regex
+// /(?:(?:[KQRNB][a-h]?|[a-h])?x?[a-h][1-8])|O-O|O-O-O(?:\+|#|(?:=[QRBN]))?/gmi
+
 import { convertFENtoGame, convertGameToFEN } from "@/lib/fen";
 import { findAllMoves } from "@/components/gameboard/lib/moves";
 import { initialFEN } from "@/components/gameboard/lib/settings";
@@ -36,17 +39,12 @@ export function extractMovesFromPGN(movetext: string) {
     const ppc = pc;
     const pbc = bc;
     if (inside) blank = 0;
-    if (t === "(") {
-      pc += 1;
-    } else if (t === ")") {
-      pc -= 1;
-    } else if (t === "{") {
-      bc += 1;
-    } else if (t === "}") {
-      bc -= 1;
-    } else if (t === " " && !inside) {
-      blank += 1;
-    } else if ((t === "\n" || t === "\r") && !inside) {
+    if (t === "(") pc += 1;
+    else if (t === ")") pc -= 1;
+    else if (t === "{") bc += 1;
+    else if (t === "}") bc -= 1;
+    else if (t === " " && !inside) blank += 1;
+    else if ((t === "\n" || t === "\r") && !inside) {
       tokens.push(item);
       item = "";
       blank = 0;
@@ -88,7 +86,6 @@ export function extractMovesFromPGN(movetext: string) {
   const moveList: (typeof move)[] = [];
   for (let t = 0; t < tokens.length; t++) {
     const token = tokens[t].trim();
-    // console.log(token);
     if (token === "") continue;
     if (token.match(/^\{.*\}$/ms)) {
       move.comments.push(token.slice(1, -1).trim());
@@ -99,7 +96,6 @@ export function extractMovesFromPGN(movetext: string) {
       move = clone({ ...emptyMove });
       move.notation = token.replace(/\+|#/, "");
     } else continue;
-    // console.log(move);
   }
   moveList.push(move);
 
@@ -235,4 +231,9 @@ export function createGame(
   });
 
   return game;
+}
+
+export function dividePGNGames(pgn: string) {
+  const games = pgn.split(/(?<=[A-Za-z0-9])\s*(?=\[)/gm);
+  return games;
 }

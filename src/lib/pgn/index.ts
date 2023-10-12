@@ -12,7 +12,7 @@ import { createGame, extractMovesFromPGN, extractTagsFromPGN } from "./helpers";
 
 export function pgnToGame(pgn: string) {
   console.log("pgn convert");
-  const gamepgn = pgn.replaceAll(/^%.+\n/g, "");
+  const gamepgn = pgn.replaceAll(/^%.+$/g, "");
   const [tagtext, movetext] = gamepgn.split(/(?<=\])\s*(?=[A-Za-z0-9.])/gm);
 
   /* Get Tags */
