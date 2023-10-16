@@ -1,5 +1,5 @@
 import {
-  BoardSquare,
+  EmptySquare,
   GameBoard,
   GamePosition,
   Layout,
@@ -8,21 +8,23 @@ import {
   PieceMove,
   Point,
 } from "@/types";
-import { letters, numbers } from "./settings";
+import { letters, numbers } from "./constants";
+import { clone } from "@/lib/utils";
 
 export function isValidIndex(index: number) {
-  if (index < 0 || index > 77 || index % 10 > 7) {
-    return false;
-  }
+  if (index < 0 || index > 77 || index % 10 > 7) return false;
   return true;
 }
 
 export function getSquare(board: GameBoard, index: number) {
   if (!isValidIndex(index)) return;
 
-  const row = Math.floor(index / 10);
-  const col = index % 10;
+  const [row, col] = convertIndexToRowCol(index);
   return board[row][col];
+}
+
+export function convertIndexToRowCol(index: number): [number, number] {
+  return [Math.floor(index / 10), index % 10];
 }
 
 export function makeMove(
@@ -30,35 +32,44 @@ export function makeMove(
   move: Move,
   lastMove: GamePosition
 ): NewBoardProps {
-  const board: GameBoard = JSON.parse(JSON.stringify(actualBoard));
+  const board = clone(actualBoard);
   if (move.from === move.to) return { board, cr: null, target: null };
 
   /* get values */
   const start = move.from;
   const end = move.to;
-  const [start_row, start_col] = [Math.floor(start / 10), start % 10];
-  const [end_row, end_col] = [Math.floor(end / 10), end % 10];
-  const start_block = board[start_row][start_col];
-  const end_block = board[end_row][end_col];
-  const colorValue = start_block.color ? 1 : -1;
+  const [srow, scol] = convertIndexToRowCol(start);
+  const [erow, ecol] = convertIndexToRowCol(end);
+  let startBlock = board[srow]?.at(scol);
+  let endBlock = board[erow]?.at(ecol);
+  if (!startBlock?.id || !endBlock) return { board, cr: null, target: null };
+  const colorValue = startBlock.color ? 1 : -1;
 
   /* Update board */
-  board[end_row][end_col] = { ...start_block, index: end_block.index };
-  board[start_row][start_col] = {
-    index: start_block.index,
-  };
+  board[erow][ecol] = { ...startBlock, index: endBlock.index };
+  board[srow][scol] = { index: startBlock.index } as EmptySquare;
+
+  /* Promotion */
+  if (move.type === "promotion" && board[erow][ecol].piece === "p") {
+    const newpiece = move.notation.split("=").at(1)?.at(0);
+    if (newpiece) {
+      board[erow][ecol].piece = newpiece.toLowerCase();
+      board[erow][ecol].id = newpiece + board[erow][ecol].id?.slice(1);
+    }
+  }
+  startBlock = board[srow][scol];
+  endBlock = board[erow][ecol];
 
   /* Remove captured pawn by enpassant */
   if (move.type === "enpassant") {
     const capturedPawnIdx = end + 10 * colorValue;
-    board[Math.floor(capturedPawnIdx / 10)][capturedPawnIdx % 10] = {
-      index: capturedPawnIdx,
-    };
+    const [cprow, cpcol] = convertIndexToRowCol(capturedPawnIdx);
+    board[cprow][cpcol] = { index: capturedPawnIdx };
   }
 
   /* Update rook position if castling */
   if (
-    start_block.piece === "k" &&
+    endBlock.piece === "k" &&
     move.type === "castle" &&
     lastMove.cr &&
     move.from % 10 === 4
@@ -78,27 +89,25 @@ export function makeMove(
   /* Set enpassant target */
   let enpassantTarget: string | null = null;
   if (
-    start_block.piece === "p" &&
+    endBlock.piece === "p" &&
     Math.abs(Math.floor((start - end) / 10)) === 2
   ) {
     const targetIdx = end + 10 * colorValue;
-    const letter = letters[targetIdx % 10];
-    const number = numbers[Math.floor(targetIdx / 10)];
-    enpassantTarget = letter + number;
+    enpassantTarget = convertIndexToSquare(targetIdx);
   }
 
   /* Set castling rights */
   let cr = lastMove.cr ?? "";
   // check king movement
-  if (start_block.piece === "k") {
-    if (start_block.color) {
+  if (endBlock.piece === "k") {
+    if (endBlock.color) {
       cr = cr.replace("K", "").replace("Q", "");
     } else {
       cr = cr.replace("k", "").replace("q", "");
     }
   }
   // check rook movement
-  for (const block of [start_block, end_block]) {
+  for (const block of [startBlock, endBlock]) {
     if (block.piece === "r") {
       if (block.color) {
         if (block.index === 77) cr = cr.replace("K", "");
@@ -129,7 +138,7 @@ export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
           animations.push({
             id: psqr.id,
             from: psqr.index,
-            payload: psqr as Required<BoardSquare>,
+            payload: psqr,
             to: -1,
           });
         } else {
@@ -144,7 +153,7 @@ export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
           animations.push({
             id: csqr.id,
             to: csqr.index,
-            payload: csqr as Required<BoardSquare>,
+            payload: csqr,
             from: -1,
           });
         } else {
@@ -179,13 +188,14 @@ export function numberClamp(num: number, max: number, min: number = 0) {
 }
 
 export function convertIndexToSquare(index: number) {
-  const letter = letters[index % 10];
-  const number = numbers[Math.floor(index) / 10];
+  const letter = letters[numberClamp(index % 10, 7)];
+  const number = numbers[numberClamp(Math.floor(index / 10), 7)];
   return letter + number;
 }
 
 export function convertSquareToIndex(square: string) {
   const row = numbers.indexOf(parseInt(square[1]));
   const col = letters.indexOf(square[0]);
-  return row * 10 + col;
+  const index = row * 10 + col;
+  return isValidIndex(index) ? index : -1;
 }

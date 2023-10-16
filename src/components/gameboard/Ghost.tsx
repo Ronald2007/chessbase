@@ -1,11 +1,11 @@
-import { BoardSquare, Point } from "@/types";
+import { PieceSquare, Point } from "@/types";
 import React from "react";
 import { View } from "react-native";
 import { isValidIndex } from "./lib/utils";
 import PieceSVG from "./lib/PieceSVG";
 
 interface Props {
-  square: Required<BoardSquare>;
+  square: PieceSquare;
   point: Point;
   flip: boolean;
 }

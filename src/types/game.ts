@@ -1,18 +1,28 @@
+/* Board */
 export type GameBoard = BoardSquare[][];
-export type BoardSquare = {
+export type BoardSquare = PieceSquare | EmptySquare;
+export interface PieceSquare {
   index: number;
-  id?: string;
-  piece?: string;
-  color?: boolean;
-};
+  id: string;
+  piece: string;
+  color: boolean;
+}
+export interface EmptySquare {
+  index: number;
+  id?: undefined;
+  piece?: undefined;
+  color?: undefined;
+}
+
+/* Move recording */
 export interface GamePosition {
   board: GameBoard;
-  fen: string;
   turn: boolean;
   cr: string | null;
   target: string | null;
   hm: number;
   fm: number;
+  fen: string;
   prevMove?: Move;
 }
 export type GameMove = GamePosition & {
@@ -20,55 +30,42 @@ export type GameMove = GamePosition & {
   comments: string[];
   positionNumber: number[];
 };
-export type NewBoardProps = Pick<GamePosition, "board" | "cr" | "target">;
+export interface Game {
+  details: Record<string, string>;
+  moves: GameMove[];
+}
+
+/* Drag and drop */
 export type Layout = { x: number; y: number; w: number; h: number };
+export type Point = { x: number; y: number };
+export type DragPayload = { point: Point; sqr: Required<BoardSquare> };
+
+export type NewBoardProps = Pick<GamePosition, "board" | "cr" | "target">;
 export type Promotion = {
   move: Move;
   newMove: GamePosition;
 };
-export type Point = { x: number; y: number };
 
-// movement
-export type DragPayload = { point: Point; sqr: Required<BoardSquare> };
-export type PieceMoves = Required<BoardSquare> & { moves: Move[] };
+/* Board Changes */
+export type MoveType = "normal" | "castle" | "enpassant" | "promotion";
 export type Move = {
   from: number;
   to: number;
   type: MoveType;
   notation: string;
+  symbol?: string;
 };
-export type MoveType = "normal" | "castle" | "enpassant" | "promotion";
+export type PieceMoves = PieceSquare & { moves: Move[] };
 export type PieceMove = {
   id: string;
   to: number;
   from: number;
-  payload: Required<BoardSquare>;
+  payload: PieceSquare;
 };
 export type Animation = PieceMove & {
   start: Point;
   end: Point;
 };
 
-// utilities
-// export type FEN = `${string} ${string} ${string} ${string} ${string} ${string}`;
+// helpers
 export type FENarray = [string, string, string, string, string, string];
-// export type Letters = ["a", "b", "c", "d", "e", "f", "g", "h"];
-// export type Numbers = [1, 2, 3, 4, 5, 6, 7, 8];
-// export type Pieces = ["r", "n", "b", "q", "k", "p"];
-// export type Color = "w" | "b";
-
-export interface GameControl {
-  back: () => void;
-  forward: () => void;
-  goToMove: (moveNumber: number[]) => void;
-  reset: () => void;
-  setGame: (moves: GameMove[]) => void;
-}
-export type BoardStyle = "brown" | "green";
-export interface Notation {
-  positionNumber: number[];
-  notation: string;
-  moveNumber: number;
-  color: boolean;
-  variations: Notation[][];
-}

@@ -5,9 +5,9 @@ import {
   MaterialCommunityIcons,
   AntDesign,
 } from "@expo/vector-icons";
-import { pgnSample, sample1, sample2, sample3 } from "@/lib/constants";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
+import { sample1 } from "@/lib/pgn/samples";
 
 interface Props {
   onGameLoad: (pgn: string) => void;
@@ -17,9 +17,10 @@ export default function Header({ onGameLoad }: Props): JSX.Element {
   const size = 30;
 
   async function pickPGNFile() {
-    // onGameLoad(sample3);
     const doc = await DocumentPicker.getDocumentAsync({
       type: "application/x-chess-pgn",
+      multiple: false,
+      copyToCacheDirectory: true,
     });
     console.log(doc);
     if (!doc.assets || doc.canceled) return;

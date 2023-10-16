@@ -1,18 +1,14 @@
-import { BoardSquare, Animation, Point } from "@/types";
+import { Animation, Point, PieceSquare } from "@/types";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder } from "react-native";
 import PieceSVG from "./lib/PieceSVG";
-import { ANIMATION_DURATION } from "./lib/settings";
+import { ANIMATION_DURATION } from "./lib/constants";
 
 interface Props {
-  sqr: Required<BoardSquare>;
+  sqr: PieceSquare;
   point: Point;
   moveOnDragRef: React.MutableRefObject<
-    (
-      point: Point,
-      square: Required<BoardSquare>,
-      type: "start" | "end"
-    ) => boolean
+    (point: Point, square: PieceSquare, type: "start" | "end") => boolean
   >;
   canMove: boolean;
   setOver: React.Dispatch<React.SetStateAction<Point | undefined>>;

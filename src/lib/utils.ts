@@ -1,12 +1,4 @@
-import { GameControl, GameMove, GamePosition } from "@/types";
-
-export const baseController: GameControl = {
-  back: () => {},
-  forward: () => {},
-  goToMove: () => {},
-  reset: () => {},
-  setGame: () => {},
-};
+import { GameMove, GamePosition } from "@/types";
 
 type Variations<V> = {
   variations: V[][];
@@ -83,4 +75,8 @@ export function findPosition<T extends Variations<T>>(
 
 export function createEmptyMove(position: GamePosition): GameMove {
   return { ...position, comments: [], variations: [], positionNumber: [0] };
+}
+
+export function clone<T>(item: T): T {
+  return JSON.parse(JSON.stringify(item));
 }

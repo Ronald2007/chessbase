@@ -1,7 +1,7 @@
 import { BoardStyle, GameControl, GameMove, GamePosition } from "@/types";
 import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
 import { View, Text } from "react-native";
-import { initialFEN } from "./gameboard/lib/settings";
+import { initialFEN } from "@/lib/fen/samples";
 import { convertFENtoGame } from "@/lib/fen";
 import ChessBoard from "./gameboard/ChessBoard";
 import { numberClamp } from "./gameboard/lib/utils";
@@ -83,6 +83,7 @@ export default forwardRef<GameControl, GameProps>(function ChessGame(
   }
 
   function addMove(newPosition: GamePosition) {
+    console.log(newPosition.prevMove?.notation);
     const newMove: GameMove = {
       ...newPosition,
       variations: [],

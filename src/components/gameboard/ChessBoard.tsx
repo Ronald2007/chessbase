@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, GestureResponderEvent } from "react-native";
 import {
-  BoardSquare,
   Layout,
   Point,
   DragPayload,
@@ -11,6 +10,7 @@ import {
   GameBoard,
   BoardStyle,
   GamePosition,
+  PieceSquare,
 } from "@/types";
 import Piece from "./Piece";
 import {
@@ -26,7 +26,7 @@ import { findAllMoves } from "./lib/moves";
 import HighlightSquare from "./HighlightSquare";
 import GhostPiece from "./Ghost";
 import SelectPromotion from "./SelectPromotion";
-import { ANIMATION_DURATION } from "./lib/settings";
+import { ANIMATION_DURATION } from "./lib/constants";
 import FadeIn from "./FadeIn";
 import Board from "./lib/Board";
 
@@ -120,11 +120,7 @@ export default function ChessBoard({
   }
 
   // if true, move was played
-  function moveOnDrag(
-    point: Point,
-    sqr: Required<BoardSquare>,
-    type: "start" | "end"
-  ) {
+  function moveOnDrag(point: Point, sqr: PieceSquare, type: "start" | "end") {
     const square = getSquare(position.board, sqr.index);
     if (!square || !square.piece) return true;
     if (promotion) {
@@ -346,12 +342,10 @@ export default function ChessBoard({
 
           return useMemo(
             () =>
-              sqr.id &&
-              sqr.piece &&
-              sqr.color !== undefined && (
+              sqr.id && (
                 <Piece
                   key={sqr.index}
-                  sqr={{ ...sqr } as Required<BoardSquare>} // safe
+                  sqr={sqr}
                   point={point}
                   moveOnDragRef={moveOnDragRef}
                   canMove={position.turn === sqr.color}

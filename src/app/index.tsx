@@ -2,11 +2,12 @@ import { View, ScrollView } from "react-native";
 import ChessGame from "@/components/ChessGame";
 import { useRef, useState } from "react";
 import { GameControl, GameMove } from "@/types";
-import { baseController } from "@/lib/utils";
+import { baseController } from "@/lib/constants";
 import GameControls from "@/components/GameControls";
 import Header from "@/components/Header";
 import NotationView from "@/components/NotationView";
 import { pgnToGame } from "@/lib/pgn";
+import { gameToPGN } from "@/lib/pgn/gameToPGN";
 
 export default function HomePage() {
   const [flip, setFlip] = useState(false);
@@ -23,9 +24,11 @@ export default function HomePage() {
   }
 
   function loadGame(pgn: string) {
-    const res = pgnToGame(pgn);
-    gameControllerRef.current.setGame(res);
-    setMoves(res);
+    console.log(pgn);
+    const game = pgnToGame(pgn);
+    console.log(gameToPGN(game));
+    gameControllerRef.current.setGame(game.moves);
+    setMoves(game.moves);
   }
 
   return (
@@ -40,7 +43,7 @@ export default function HomePage() {
           onMoveChange={onMoveChange}
         />
         {/* Notation of moves */}
-        <ScrollView className="w-full mt-2 h-0 min-h-fit">
+        {/* <ScrollView className="w-full mt-2 h-0 min-h-fit">
           <NotationView
             moves={moves}
             level={0}
@@ -48,7 +51,7 @@ export default function HomePage() {
             onTap={(nums) => gameControllerRef.current.goToMove(nums)}
             figurines={true}
           />
-        </ScrollView>
+        </ScrollView> */}
       </View>
       {/* Game Navigation */}
       <View className="w-full">

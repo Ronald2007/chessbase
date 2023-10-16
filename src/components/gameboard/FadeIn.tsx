@@ -2,7 +2,7 @@ import { Animation } from "@/types";
 import React, { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import PieceSVG from "./lib/PieceSVG";
-import { ANIMATION_DURATION } from "./lib/settings";
+import { ANIMATION_DURATION } from "./lib/constants";
 
 interface Props {
   animation: Animation;

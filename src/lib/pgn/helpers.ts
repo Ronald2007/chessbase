@@ -3,12 +3,13 @@
 
 import { convertFENtoGame, convertGameToFEN } from "@/lib/fen";
 import { findAllMoves } from "@/components/gameboard/lib/moves";
-import { initialFEN } from "@/components/gameboard/lib/settings";
+import { initialFEN } from "@/lib/fen/samples";
 import {
   convertSquareToIndex,
   makeMove,
 } from "@/components/gameboard/lib/utils";
 import { GameMove, GamePosition, Move } from "@/types";
+import { clone } from "../utils";
 
 export function extractTagsFromPGN(tagtext: string) {
   const tagList: string[] = tagtext.match(/\[\s*\w+\s*".+"\s*\]/gm) ?? [];
@@ -27,6 +28,7 @@ export function extractTagsFromPGN(tagtext: string) {
 export function extractMovesFromPGN(movetext: string) {
   // /(?=[A-Za-z][a-zA-Z0-9=-]+)(?!([^(]*\))|([^{]*\}))(\b)/gm
   // /(?<![({].*)\b[A-Za-z][a-zA-Z0-9=-]+\b(?!([^(]*\))|([^{]*\}))/gm
+  movetext = movetext.replaceAll("\r\n", " ");
   const tokens: string[] = [];
   let item = "";
   let blank = 0;
@@ -44,13 +46,14 @@ export function extractMovesFromPGN(movetext: string) {
     else if (t === "{") bc += 1;
     else if (t === "}") bc -= 1;
     else if (t === " " && !inside) blank += 1;
-    else if ((t === "\n" || t === "\r") && !inside) {
-      tokens.push(item);
-      item = "";
-      blank = 0;
-      i += 1;
-      continue;
-    } else {
+    // else if ((t === "\n" || t === "\r") && !inside) {
+    //   tokens.push(item);
+    //   item = "";
+    //   blank = 0;
+    //   i += 1;
+    //   continue;
+    // } else {
+    else {
       if (blank > 0 && !inside) {
         tokens.push(item);
         item = "";
@@ -75,12 +78,11 @@ export function extractMovesFromPGN(movetext: string) {
   }
   tokens.push(item);
 
-  const clone = <T>(item: T): T => JSON.parse(JSON.stringify(item));
-
   const emptyMove: {
     notation: string | null;
     comments: string[];
     variations: string[];
+    symbol?: string;
   } = { notation: null, comments: [], variations: [] };
   let move = clone({ ...emptyMove });
   const moveList: (typeof move)[] = [];
@@ -94,30 +96,14 @@ export function extractMovesFromPGN(movetext: string) {
     } else if (token.match(/[A-Za-z][a-zA-Z0-9=+#-]+/)) {
       moveList.push(move);
       move = clone({ ...emptyMove });
-      move.notation = token.replace(/\+|#/, "");
+      // move.notation = token.replace(/\+|#/, "");
+      move.notation = token;
+    } else if (token.match(/^\$\d+$/)) {
+      move.symbol = token;
     } else continue;
   }
   moveList.push(move);
 
-  // const rawMoves = tokens
-
-  // console.log(rawMoves);
-
-  // const moveList = rawMoves.map((move) => {
-  //   const notation = move
-  //     .match(/[A-Za-z][a-zA-Z0-9=-]+(?!([^(]*\))|([^{]*\}))/)
-  //     ?.at(0);
-  //   const comments = (move.match(/\{.*?[^{]*\}/g) ?? [])
-  //     .map((c) => c.slice(1, -1))
-  //     .filter((c) => c.trim() !== "");
-  //   const variations = (move.match(/\(.*?[^(]*\)/g) ?? [])
-  //     .map((v) => v.slice(1, -1))
-  //     .filter((v) => v.trim() !== "");
-
-  //   return { notation, comments, variations };
-  // });
-
-  // console.log(moveList);
   return moveList;
 }
 
@@ -160,16 +146,21 @@ export function notationToMove(notation: string, last: GamePosition): Move {
     (m) =>
       m.piece === piece.toLowerCase() && m.moves.find((pm) => pm.to === move.to)
   );
-  if (samePieces.length === 0) return move;
+  if (samePieces.length === 0) {
+    return move;
+  }
   // if (samePieces.length > 1) console.log(samePieces);
 
   move.from = samePieces[0].moves[0].from;
   const samePiece = samePieces.find((sp) =>
-    sp.moves.find((m) => m.notation === move.notation)
+    sp.moves.find((m) => move.notation.startsWith(m.notation))
   );
-  const foundMove = samePiece?.moves.find((m) => m.notation === move.notation);
+  const foundMove = samePiece?.moves.find((m) =>
+    move.notation.startsWith(m.notation)
+  );
+  move.from = foundMove?.from ?? move.from;
 
-  return foundMove ?? move;
+  return move;
 }
 
 export function createGame(
@@ -201,6 +192,7 @@ export function createGame(
 
     const lastMove = game[game.length - 1] ?? startingMove;
     // console.log(move.notation);
+    // console.log(move.notation);
     const madeMove = notationToMove(move.notation, lastMove);
     // console.log(lastMove.turn, madeMove);
     const changed = makeMove(lastMove.board, madeMove, lastMove);
@@ -211,7 +203,7 @@ export function createGame(
       target: changed.target,
       hm: 0,
       fm: !lastMove.turn ? lastMove.fm + 1 : lastMove.fm,
-      prevMove: madeMove,
+      prevMove: { ...madeMove, symbol: move.symbol },
       fen: "",
     };
     newMove.fen = convertGameToFEN(newMove);

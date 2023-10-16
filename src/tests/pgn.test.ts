@@ -1,4 +1,4 @@
-import { pgnSample } from "@/lib/constants";
+import { pgnSample } from "@/lib/pgn/samples";
 import { pgnToGame } from "@/lib/pgn";
 import { dividePGNGames, extractTagsFromPGN } from "@/lib/pgn/helpers";
 
@@ -27,9 +27,10 @@ describe("PGN Converter", () => {
     expect(extractTagsFromPGN(pgns[0])).toEqual(tags0);
   });
 
-  it.skip("converts pgn to game", () => {
+  it("converts pgn to game", () => {
     for (const pgn of pgns) {
-      expect(pgnToGame(pgn)).toEqual([]);
+      const { moves } = pgnToGame(pgn);
+      expect(moves.length).toBeGreaterThan(1);
     }
   });
 });

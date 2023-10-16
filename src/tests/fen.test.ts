@@ -4,7 +4,7 @@ import {
   testFEN2,
   testFEN3,
   testFEN4,
-} from "@/components/gameboard/lib/settings";
+} from "@/lib/fen/samples";
 import { convertFENtoGame, convertGameToFEN } from "@/lib/fen";
 
 describe("FEN conversion", () => {
