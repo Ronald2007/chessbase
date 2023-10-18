@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder } from "react-native";
 import PieceSVG from "./lib/PieceSVG";
 import { ANIMATION_DURATION } from "./lib/constants";
+import { numberClamp } from "./lib/utils";
 
 interface Props {
   sqr: PieceSquare;
@@ -30,47 +31,70 @@ export default function Piece({
   const { id, index, color, piece } = sqr;
   const [isDragging, setIsDragging] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const offset = { x: size.w / 2, y: size.h / 2 };
+  const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
+  const center = { x: size.w / 2, y: size.h / 2 };
   const fadeOut = useRef(new Animated.Value(1)).current;
-  const pan = useRef(new Animated.ValueXY()).current;
+  const pan = useRef(new Animated.ValueXY(point)).current;
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: (e) => {
+    onStartShouldSetPanResponder: (e, g) => {
       e.stopPropagation();
       const canDrag = !moveOnDragRef.current(point, sqr, "start");
       if (!canMove || !canDrag) return false;
 
+      // finds distance between touch and center of element
+      const ofs = {
+        x: (e.nativeEvent.locationX - center.x) * (flip ? -1 : 1),
+        y: (e.nativeEvent.locationY - center.y) * (flip ? -1 : 1),
+      };
+      if (!(Math.abs(g.dx) < 5 && Math.abs(g.dy) < 5)) {
+        pan.setOffset(ofs);
+      }
+      setOffset(ofs);
+
       return true;
     },
     onPanResponderMove: (_, g) => {
+      if (Math.abs(g.dx) < 5 && Math.abs(g.dy) < 5) {
+        return;
+      }
+      pan.setOffset(offset);
       setIsDragging(true);
 
-      // position of the touch, relative to board
+      // position of the touch, clamped, relative to board
       const curr = {
-        x: point.x + g.dx * (flip ? -1 : 1) + offset.x,
-        y: point.y + g.dy * (flip ? -1 : 1) + offset.y,
+        x: numberClamp(
+          point.x + g.dx * (flip ? -1 : 1),
+          size.w * 8 - offset.x - center.x,
+          0 - offset.x - center.x - 1
+        ),
+        y: numberClamp(
+          point.y + g.dy * (flip ? -1 : 1),
+          size.h * 8 - offset.y - center.y,
+          0 - offset.y - center.y - 1
+        ),
       };
 
-      // clamp position
-      if (curr.y > size.h * 8) curr.y = size.h * 8;
-      if (curr.x > size.w * 8) curr.x = size.w * 8;
-      if (curr.y < 0) curr.y = 0;
-      if (curr.x < 0) curr.x = 0;
-
-      setOver(curr);
+      // position of finger, center of dragged piece
+      setOver({
+        x: curr.x + offset.x + center.x,
+        y: curr.y + offset.y + center.y,
+      });
 
       Animated.event([{ x: pan.x, y: pan.y }], {
         useNativeDriver: false,
-      })({ x: curr.x - point.x - offset.x, y: curr.y - point.y - offset.y });
+      })({ x: curr.x - point.x, y: curr.y - point.y });
     },
     onPanResponderEnd: (_, g) => {
-      // position of the touch, relative to board
+      // position of the finger, relative to board
       const endPoint = {
-        x: point.x + g.dx * (flip ? -1 : 1) + offset.x,
-        y: point.y + g.dy * (flip ? -1 : 1) + offset.y,
+        x: point.x + g.dx * (flip ? -1 : 1) + offset.x + center.x,
+        y: point.y + g.dy * (flip ? -1 : 1) + offset.y + center.y,
       };
 
       setIsDragging(false);
       setOver(undefined);
+      pan.flattenOffset(); // resets & merges offset to base value
+      setOffset({ x: 0, y: 0 });
 
       const movePlayed = moveOnDragRef.current(endPoint, sqr, "end");
       setIsAnimating(true);

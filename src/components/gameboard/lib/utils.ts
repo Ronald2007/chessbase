@@ -167,8 +167,8 @@ export function findDifferences(prevBoard: GameBoard, board: GameBoard) {
 }
 
 export function convertPointToIndex(point: Point, layout: Layout) {
-  const row = Math.floor(Math.abs(point.y) / (layout.h / 8));
-  const col = Math.floor(Math.abs(point.x) / (layout.w / 8));
+  const row = Math.floor(point.y / (layout.h / 8));
+  const col = Math.floor(point.x / (layout.w / 8));
 
   const index = row * 10 + col;
   return index;

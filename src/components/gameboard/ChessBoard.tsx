@@ -162,6 +162,7 @@ export default function ChessBoard({
     if (!endSquare) return false;
 
     const movePlayed = playMove(selected.sqr.index, endIndex, type);
+    if (!movePlayed) setSelected(undefined);
     return movePlayed;
   }
 

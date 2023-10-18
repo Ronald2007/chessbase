@@ -1,4 +1,4 @@
-export const ANIMATION_DURATION = 250; // default 150
+export const ANIMATION_DURATION = 150; // default 150
 
 // Do not modify order
 export const letters = ["a", "b", "c", "d", "e", "f", "g", "h"];

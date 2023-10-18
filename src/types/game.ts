@@ -40,12 +40,6 @@ export type Layout = { x: number; y: number; w: number; h: number };
 export type Point = { x: number; y: number };
 export type DragPayload = { point: Point; sqr: Required<BoardSquare> };
 
-export type NewBoardProps = Pick<GamePosition, "board" | "cr" | "target">;
-export type Promotion = {
-  move: Move;
-  newMove: GamePosition;
-};
-
 /* Board Changes */
 export type MoveType = "normal" | "castle" | "enpassant" | "promotion";
 export type Move = {
@@ -65,6 +59,11 @@ export type PieceMove = {
 export type Animation = PieceMove & {
   start: Point;
   end: Point;
+};
+export type NewBoardProps = Pick<GamePosition, "board" | "cr" | "target">;
+export type Promotion = {
+  move: Move;
+  newMove: GamePosition;
 };
 
 // helpers

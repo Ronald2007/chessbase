@@ -13,23 +13,22 @@ export default function HighlightSquare({
   type,
   isCapture,
 }: Props): JSX.Element {
-  let className: string = "";
-  switch (type) {
-    case "prev-start":
-      className = "bg-blue-300";
-      break;
-    case "prev-end":
-      className = "bg-blue-600";
-      break;
-    case "over":
-      className = "z-10";
-      break;
-  }
+  const bgcolor =
+    type === "prev-start"
+      ? "#93c5fd"
+      : type === "prev-end"
+      ? "#2563eb"
+      : undefined;
 
   return (
     <View
-      className={`w-[12.5%] h-[12.5%] absolute flex items-center justify-center ${className}`}
-      style={{ left: point.x, top: point.y }}
+      className="w-[12.5%] h-[12.5%] absolute flex items-center justify-center"
+      style={{
+        left: point.x,
+        top: point.y,
+        zIndex: type === "over" || type === "possible" ? 15 : undefined,
+        backgroundColor: bgcolor,
+      }}
       pointerEvents="none"
     >
       {type === "over" && (
